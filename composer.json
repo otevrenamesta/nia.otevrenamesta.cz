@@ -10,7 +10,7 @@
         "cakephp/migrations": "^2.0.0",
         "cakephp/plugin-installer": "^1.0",
         "mobiledetect/mobiledetectlib": "2.*",
-        "simplesamlphp/saml2": "^3.0"
+        "onelogin/php-saml": "^3.3"
     },
     "require-dev": {
         "cakephp/bake": "^1.9.0",
