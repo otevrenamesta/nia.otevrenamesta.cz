@@ -2,6 +2,7 @@
 ##########################
 /config/app.php
 /config/.env
+/config/private.key
 /logs/*
 /tmp/*
 /vendor/*

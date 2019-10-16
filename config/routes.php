@@ -34,4 +34,11 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->applyMiddleware('csrf');
 
     $routes->connect('/', ['controller' => 'Pages', 'action' => 'intro']);
+    $routes->connect('/idp-info', ['controller' => 'Pages', 'action' => 'idpInfo']);
+    $routes->connect('/sep-info', ['controller' => 'Pages', 'action' => 'sepInfo']);
+
+    $routes->connect('/PrivateAccess', ['controller' => 'Pages', 'action' => 'PrivateAccess']);
+    $routes->connect('/ExternalLogin', ['controller' => 'Pages', 'action' => 'ExternalLogin']);
+    $routes->connect('/ExternalLogout', ['controller' => 'Pages', 'action' => 'ExternalLogout']);
+    $routes->connect('/SeP/Konfigurace.xml', ['controller' => 'Pages', 'action' => 'SePConfiguration']);
 });
