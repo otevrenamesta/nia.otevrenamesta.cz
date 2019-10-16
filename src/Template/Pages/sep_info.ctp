@@ -42,7 +42,8 @@ use App\View\AppView; ?>
 <h4>Adresa pro načtení veřejné části certifikátu z metadat (URL)</h4>
 <ul>
     <li>SeP může ale nemusí vystavit svou vlastní
-        konfiguraci <?= $this->Html->link('https://nia.otevrenamesta.cz/SeP/Konfigurace.xml') ?></li>
+        konfiguraci (například <?= $this->Html->link('https://nia.otevrenamesta.cz/SeP/Konfigurace.xml') ?> )
+    </li>
     <li>Součástí konfigurace je i certifikát, kterým se na straně NIA IdP šifrují odpovědi</li>
     <li>Pokud je tato konfigurace vč. certifikátu, lze jej použít pro dynamickou aktualizaci certifikátu, místo statické
         konfigurace na portále eIdentita
@@ -57,4 +58,9 @@ use App\View\AppView; ?>
 <ul>
     <li>URL na kterou bude uživatel přesměrován po odhlášení</li>
     <li>Použitá metoda bude HTTP-REDIRECT (dle IdP metadat SingleLogoutService)</li>
+</ul>
+<h4>Unikátní URL adresa zabezpečené části Vašeho webu</h4>
+<ul>
+    <li>Nejedná se o nutně existující URL adresu, ale především o unikátní identifikátor SeP</li>
+    <li>Tento identifikátor se používá v AuthnResponse jako parametr AudienceRestriction/Audience</li>
 </ul>
