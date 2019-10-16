@@ -116,6 +116,11 @@ class PagesController extends AppController
         $this->set('title', 'Informace o testovacím SeP - Service Provider');
     }
 
+    public function exampleStep1()
+    {
+
+    }
+
     public function PrivateAccess()
     {
 

@@ -41,4 +41,6 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/ExternalLogin', ['controller' => 'Pages', 'action' => 'ExternalLogin']);
     $routes->connect('/ExternalLogout', ['controller' => 'Pages', 'action' => 'ExternalLogout']);
     $routes->connect('/SeP/Konfigurace.xml', ['controller' => 'Pages', 'action' => 'SePConfiguration']);
+
+    $routes->connect('/example/step1', ['controller' => 'Pages', 'action' => 'exampleStep1']);
 });
