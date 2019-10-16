@@ -45,7 +45,6 @@ use App\View\AppView; ?>
 </aside>
 
 <h2>Ukázka XML metadat (testovací prostředí)</h2>
-<script>hljs.initHighlightingOnLoad();</script>
 <pre><code class="xml">&lt;EntityDescriptor xmlns=&quot;urn:oasis:names:tc:SAML:2.0:metadata&quot; ID=&quot;_8f5bbcc0-6a28-4cfe-a335-b6abf1aa089d&quot; entityID=&quot;urn:microsoft:cgg2010:fpsts&quot;&gt;
 
  &lt;!-- Sekce s podpisem a kontrolním součtem obsahu dokumentu (rsa-sha256) dle specifikace xmldsig --&gt;

@@ -43,4 +43,5 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/SeP/Konfigurace.xml', ['controller' => 'Pages', 'action' => 'SePConfiguration']);
 
     $routes->connect('/example/step1', ['controller' => 'Pages', 'action' => 'exampleStep1']);
+    $routes->connect('/example/step2', ['controller' => 'Pages', 'action' => 'exampleStep2']);
 });

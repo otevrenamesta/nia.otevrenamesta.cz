@@ -15,9 +15,14 @@
 
 namespace App\Controller;
 
+use DOMDocument;
 use Exception;
+use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\IdPMetadataParser;
 use OneLogin\Saml2\Metadata;
+use OneLogin\Saml2\Response;
+use OneLogin\Saml2\Settings;
+use OneLogin\Saml2\Utils;
 
 class PagesController extends AppController
 {
@@ -103,7 +108,6 @@ class PagesController extends AppController
     {
         $this->set('title', 'Informace o NIA IdP - Identity Provider');
         try {
-
             $metadata = IdPMetadataParser::parseRemoteXML($this->metadata_url);
             $this->set(compact('metadata'));
         } catch (Exception $e) {
@@ -116,9 +120,21 @@ class PagesController extends AppController
         $this->set('title', 'Informace o testovacím SeP - Service Provider');
     }
 
+    private function der2pem($der_data) {
+        $pem = chunk_split(base64_encode($der_data), 64, "\n");
+        $pem = "-----BEGIN CERTIFICATE-----\n".$pem."-----END CERTIFICATE-----\n";
+        return $pem;
+    }
+
     public function exampleStep1()
     {
+        $this->set('title', 'Integrace - První krok');
 
+        $metadata_string = file_get_contents($this->metadata_url);
+        $idp_metadata = IdPMetadataParser::parseXML($metadata_string);
+        $metadata_xml_dom = Utils::loadXML(new DOMDocument(), $metadata_string);
+        $cert = $this->der2pem(base64_decode($idp_metadata['idp']['x509cert']));
+        $valid = Utils::validateSign($metadata_xml_dom, $cert);
     }
 
     public function PrivateAccess()

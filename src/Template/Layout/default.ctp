@@ -22,6 +22,7 @@ use App\View\AppView; ?>
     <link rel="stylesheet"
           href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/default.min.css">
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
 
     <?= $this->Html->css(['style']) ?>
 
@@ -40,17 +41,9 @@ use App\View\AppView; ?>
             <nav class="nav">
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="pure-button" href="https://github.com/otevrenamesta/eidentita-example/wiki">Dokumentace</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="pure-button" href="https://github.com/otevrenamesta/eidentita-example">Zdrojový
-                            kód</a>
-                    </li>
-                </ul>
-                <ul class="nav-list">
-                    <li class="nav-item">
                         <a class="pure-button"
-                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'sepInfo']) ?>">SeP - Úvod</a>
+                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'sepInfo']) ?>">SeP -
+                            Úvod</a>
                     </li>
                     <li class="nav-item">
                         <a class="pure-button"
@@ -58,12 +51,36 @@ use App\View\AppView; ?>
                             Úvod</a>
                     </li>
                 </ul>
+                <h2>Ukázkový průchod</h2>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="pure-button"
+                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'exampleStep1']) ?>">Krok
+                            1</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="pure-button"
+                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'exampleStep2']) ?>">Krok
+                            2</a>
+                    </li>
+                </ul>
             </nav>
         </div>
     </div>
 
-    <div class="content pure-u-1 pure-u-md-3-4 bottom-spacing">
-        <?= $this->fetch('content') ?>
+    <div class="content pure-u-1 pure-u-md-3-4">
+        <div class="bottom-spacing">
+            <?= $this->fetch('content') ?>
+        </div>
+        <div class="footer">
+            <div class="pure-menu pure-menu-horizontal">
+                <ul>
+                    <li class="pure-menu-item"><a class="pure-menu-link"
+                                                  href="https://github.com/otevrenamesta/eidentita-example">Github</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
