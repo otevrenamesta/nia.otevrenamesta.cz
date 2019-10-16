@@ -9,25 +9,27 @@
     autority
 </p>
 
-<h2>1. <?= $this->Html->link('NIA IdP - Správa Základních Registrů ČR', ['controller' => 'Pages', 'action' => 'idpInfo']) ?></h2>
+<h2>Tento projekt má 3 části</h2>
+
+<h3>1. <?= $this->Html->link('NIA IdP - Správa Základních Registrů ČR - Dokumentace', ['controller' => 'Pages', 'action' => 'idpInfo']) ?></h3>
 <p>
     IdP (Identity Provider), neboli poskytovatel identit (zprostředkovatel přihlášení)<br/>
     Pokud vás zajímá jaké služby poskytuje IdP, jak se o těchto službách dozvíte, pokračujte zde:
     <?= $this->Html->link('IdP - Úvod', ['controller' => 'Pages', 'action' => 'idpInfo']) ?>
 </p>
 
-<h2>2. <?= $this->Html->link('SeP - Poskytovatel služeb', ['controller' => 'Pages', 'action' => 'sepInfo']) ?></h2>
+<h3>2. <?= $this->Html->link('SeP - Poskytovatel služeb - Dokumentace', ['controller' => 'Pages', 'action' => 'sepInfo']) ?></h3>
 <p>
     SeP (Service Provider), neboli poskytovatel služeb, může být orgán veřejné správy nebo soukromý subjekt<br/>
     Pokud vás zajímá jak se můžete stát SeP a jak se integrovat s NIA IdP, přečtěte si více zde:
     <?= $this->Html->link('SeP - Úvod', ['controller' => 'Pages', 'action' => 'sepInfo']) ?>
 </p>
 
-<h2>
-    3. <?= $this->Html->link('Ukázkový komentovaný průchod integrací', ['controller' => 'Pages', 'action' => 'idpInfo']) ?></h2>
+<h3>
+    3. <?= $this->Html->link('Ukázkový komentovaný průchod integrací', ['controller' => 'Pages', 'action' => 'exampleStep1']) ?></h3>
 <p>
     Chcete vidět jak integrace a komunikace s NIA IdP vypadá v praxi z pohledu uživatele i programátora?<br/>
-    Klikněte zde: <?= $this->Html->link('První krok', ['controller' => 'Pages', 'action' => 'exampleStep1']) ?>
+    Začněte zde: <?= $this->Html->link('První krok', ['controller' => 'Pages', 'action' => 'exampleStep1']) ?>
 </p>
 <hr/>
 <h2>Tento projekt vytvořila:</h2>
