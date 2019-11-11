@@ -26,12 +26,6 @@ use Cake\Routing\Router;
 Router::defaultRouteClass(DashedRoute::class);
 
 Router::scope('/', function (RouteBuilder $routes) {
-    // Register scoped middleware for in scopes.
-    $routes->registerMiddleware('csrf', new CsrfProtectionMiddleware([
-        'httpOnly' => true
-    ]));
-
-    $routes->applyMiddleware('csrf');
 
     $routes->connect('/', ['controller' => 'Pages', 'action' => 'intro']);
     $routes->connect('/idp-info', ['controller' => 'Pages', 'action' => 'idpInfo']);

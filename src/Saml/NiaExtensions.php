@@ -146,7 +146,9 @@ class NiaExtensions
                 $attrElement->setAttribute('isRequired', $attrArray['isRequired'] ? 'true' : 'false');
                 $attrElement->setAttribute('NameFormat', $attrArray['NameFormat']);
                 if (!empty($attrArray['AttributeValue'])) {
-                    $attrElement->nodeValue = $attrArray['AttributeValue'];
+                    $attrValueElement = $doc->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:AttributeValue');
+                    $attrValueElement->nodeValue = $attrArray['AttributeValue'];
+                    $attrElement->appendChild($attrValueElement);
                 }
                 $requested_attributes->appendChild($attrElement);
             }
@@ -155,6 +157,6 @@ class NiaExtensions
 
         $dom->appendChild($extensions);
 
-        return $dom;
+        return Utils::copyElement($dom);
     }
 }

@@ -19,15 +19,18 @@ use App\Saml\NiaContainer;
 use App\Saml\NiaExtensions;
 use App\Saml\NiaServiceProvider;
 use Cake\Cache\Cache;
+use Cake\Event\Event;
+use DOMDocument;
 use Exception;
-use OneLogin\Saml2\AuthnRequest;
-use OneLogin\Saml2\IdPMetadataParser;
-use OneLogin\Saml2\Metadata;
-use OneLogin\Saml2\Settings;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use SAML2\Certificate\X509;
 use SAML2\Compat\ContainerSingleton;
+use SAML2\Configuration\ServiceProvider;
+use SAML2\Constants;
 use SAML2\DOMDocumentFactory;
+use SAML2\EncryptedAssertion;
+use SAML2\Response;
+use SAML2\Utils;
 use SAML2\XML\md\EntityDescriptor;
 use SAML2\XML\md\IDPSSODescriptor;
 
@@ -185,6 +188,9 @@ class PagesController extends AppController
         $nia_public_key->loadKey($local_tnia_cert_data, false, true);
         $this->set('idp_descriptor_signature_valid', $idp_descriptor->validate($nia_public_key));
 
+        $local_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'private']);
+        $local_public_key->loadKey(file_get_contents(CONFIG . 'private.key'), false, false);
+
         $idp_sso_descriptor = false;
         foreach ($idp_descriptor->getRoleDescriptor() as $role_descriptor) {
             if ($role_descriptor instanceof IDPSSODescriptor) {
@@ -198,7 +204,7 @@ class PagesController extends AppController
 
         if ($idp_sso_descriptor instanceof IDPSSODescriptor) {
             foreach ($idp_sso_descriptor->getSingleSignOnService() as $descriptorType) {
-                if ($descriptorType->getBinding() === 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect') {
+                if ($descriptorType->getBinding() === Constants::BINDING_HTTP_REDIRECT) {
                     $sso_redirect_login_url = $descriptorType->getLocation();
                 } else if ($descriptorType->getBinding() === 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST') {
                     $sso_post_login_url = $descriptorType->getLocation();
@@ -222,12 +228,25 @@ class PagesController extends AppController
         $exts = new NiaExtensions($auth_request_xml_domelement);
         $exts->addAllDefaultAttributes();
         $auth_request_xml_domelement = $exts->toXML();
+
         $auth_request_xml = $auth_request_xml_domelement->ownerDocument->saveXML($auth_request_xml_domelement);
+        $auth_request_xml_domelement = DOMDocumentFactory::fromString($auth_request_xml);
+
+        Utils::insertSignature($local_public_key, [$local_cert_data], $auth_request_xml_domelement->documentElement, $auth_request_xml_domelement->getElementsByTagName('Issuer')->item(0)->nextSibling);
+
+        /** @var DOMDocument $auth_request_xml_domelement */
+        $auth_request_xml = $auth_request_xml_domelement->saveXML();
+
+        $auth_request_encoded = gzdeflate($auth_request_xml);
+        $auth_request_encoded = base64_encode($auth_request_encoded);
+        $auth_request_encoded = urlencode($auth_request_encoded);
+
+        $link = $sso_redirect_login_url . '?SAMLRequest=' . $auth_request_encoded;
 
         $end = time();
 
         $this->set('took', $end - $start);
-        $this->set(compact('idp_descriptor', 'local_tnia_cert', 'local_cert', 'auth_request', 'auth_request_xml'));
+        $this->set(compact('idp_descriptor', 'local_tnia_cert', 'local_cert', 'auth_request', 'auth_request_xml', 'auth_request_encoded', 'link'));
     }
 
     public function PrivateAccess()
@@ -237,7 +256,31 @@ class PagesController extends AppController
 
     public function ExternalLogin()
     {
+        $nia_container = new NiaContainer($this);
+        $service_provider = new NiaServiceProvider();
+        ContainerSingleton::setContainer($nia_container);
 
+        $saml_response_raw = $this->request->getData('SAMLResponse');
+        $saml_response_raw = base64_decode($saml_response_raw);
+
+        $saml_response_dom = DOMDocumentFactory::fromString($saml_response_raw);
+
+        $local_private_key = new XMLSecurityKey(XMLSecurityKey::RSA_OAEP_MGF1P, ['type' => 'private']);
+        $local_private_key->loadKey(file_get_contents(CONFIG . 'private.key'), false, false);
+
+        $response = new Response($saml_response_dom->documentElement);
+        $assertion = $response->getAssertions()[0];
+        if ($assertion instanceof EncryptedAssertion) {
+            $assertion = $assertion->getAssertion($local_private_key);
+        }
+
+        $this->set(compact('saml_response_raw', 'saml_response_dom', 'response', 'assertion'));
+    }
+
+    public function beforeFilter(Event $event)
+    {
+        $this->Security->setConfig('unlockedActions', ['externalLogin']);
+        return parent::beforeFilter($event);
     }
 
     public function ExternalLogout()
@@ -247,6 +290,8 @@ class PagesController extends AppController
 
     public function SePConfiguration()
     {
+
+
         try {
             $idpMetadata = IdPMetadataParser::parseRemoteXML($this->metadata_url);
             $this->example_configuration = IdPMetadataParser::injectIntoSettings($this->example_configuration, $idpMetadata);
@@ -261,10 +306,4 @@ class PagesController extends AppController
         return $this->response->withType('text/xml')->withStringBody($metadata);
     }
 
-    private function der2pem($der_data)
-    {
-        $pem = chunk_split(base64_encode($der_data), 64, "\n");
-        $pem = "-----BEGIN CERTIFICATE-----\n" . $pem . "-----END CERTIFICATE-----\n";
-        return $pem;
-    }
 }

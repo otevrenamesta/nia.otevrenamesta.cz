@@ -12,12 +12,15 @@
  * @since     3.3.0
  * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace App;
 
 use Cake\Core\Configure;
 use Cake\Core\Exception\MissingPluginException;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
 use Cake\Http\BaseApplication;
+use Cake\Http\Middleware\CsrfProtectionMiddleware;
+use Cake\Network\Request;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 
@@ -53,6 +56,22 @@ class Application extends BaseApplication
     }
 
     /**
+     * @return void
+     */
+    protected function bootstrapCli()
+    {
+        try {
+            $this->addPlugin('Bake');
+        } catch (MissingPluginException $e) {
+            // Do not halt if the plugin is missing
+        }
+
+        $this->addPlugin('Migrations');
+
+        // Load more plugins here
+    }
+
+    /**
      * Setup the middleware queue your application will use.
      *
      * @param \Cake\Http\MiddlewareQueue $middlewareQueue The middleware queue to setup.
@@ -78,22 +97,20 @@ class Application extends BaseApplication
             // `new RoutingMiddleware($this, '_cake_routes_')`
             ->add(new RoutingMiddleware($this));
 
+        $csrf = new CsrfProtectionMiddleware([
+            'secure' => true,
+            'httponly' => true,
+            'cookieName' => 'niaCsrfProtector',
+            'field' => '_niaCsrf'
+        ]);
+        $csrf->whitelistCallback(function (Request $request) {
+            if ($request->getParam('action') === 'externalLogin') {
+                return true;
+            }
+            return false;
+        });
+        $middlewareQueue->add($csrf);
+
         return $middlewareQueue;
-    }
-
-    /**
-     * @return void
-     */
-    protected function bootstrapCli()
-    {
-        try {
-            $this->addPlugin('Bake');
-        } catch (MissingPluginException $e) {
-            // Do not halt if the plugin is missing
-        }
-
-        $this->addPlugin('Migrations');
-
-        // Load more plugins here
     }
 }

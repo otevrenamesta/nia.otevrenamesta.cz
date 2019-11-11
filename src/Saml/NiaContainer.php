@@ -119,7 +119,7 @@ class NiaContainer extends AbstractContainer
     public function getIssuer(): Issuer
     {
         $issuer = new Issuer();
-        $issuer->setValue('https://nia.otevrenamesta.cz');
+        $issuer->setValue('https://nia.otevrenamesta.cz/PrivateAccess');
         return $issuer;
     }
 }

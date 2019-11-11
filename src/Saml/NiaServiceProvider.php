@@ -16,4 +16,9 @@ class NiaServiceProvider extends ServiceProvider
     {
         parent::__construct([]);
     }
+
+    public function getPrivateKey(string $name, bool $required = null)
+    {
+        return file_get_contents(CONFIG . 'private.key');
+    }
 }
