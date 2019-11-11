@@ -49,7 +49,8 @@ use App\View\AppView; ?>
    return $pem;
  }
 
- // Pro ukázku používáme veřejný klíč přímo z metadat, správně by soubor měl být uložen na serveru SeP aby se zabránilo kompromitaci
+ // Pro ukázku používáme veřejný klíč přímo z metadat, správně by soubor měl být uložen na serveru SeP
+ // ověření zajistí, že data nejsou poškozena nebo modifikována po cestě k SeP
  $cert = der2pem(base64_decode($metadata['idp']['x509cert']));
  $metadata_xml_dom = Utils::loadXML(new DOMDocument(), $metadata_string);
  $signatureOK = Utils::validateSign($metadata_xml_dom, $cert);

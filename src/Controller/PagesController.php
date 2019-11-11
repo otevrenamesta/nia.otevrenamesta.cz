@@ -15,23 +15,36 @@
 
 namespace App\Controller;
 
-use DOMDocument;
+use App\Saml\NiaContainer;
+use App\Saml\NiaExtensions;
+use App\Saml\NiaServiceProvider;
+use Cake\Cache\Cache;
 use Exception;
-use OneLogin\Saml2\Auth;
+use OneLogin\Saml2\AuthnRequest;
 use OneLogin\Saml2\IdPMetadataParser;
 use OneLogin\Saml2\Metadata;
-use OneLogin\Saml2\Response;
 use OneLogin\Saml2\Settings;
-use OneLogin\Saml2\Utils;
+use RobRichards\XMLSecLibs\XMLSecurityKey;
+use SAML2\Certificate\X509;
+use SAML2\Compat\ContainerSingleton;
+use SAML2\DOMDocumentFactory;
+use SAML2\XML\md\EntityDescriptor;
+use SAML2\XML\md\IDPSSODescriptor;
 
 class PagesController extends AppController
 {
 
     private $metadata_url = "https://tnia.eidentita.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml";
     private $example_configuration = [
-        'strict' => true,
+        'strict' => false,
         'debug' => true,
         'baseurl' => 'https://nia.otevrenamesta.cz/',
+        'security' => [
+            'requestedAuthnContextComparison' => 'minimum',
+            'requestedAuthnContext' => [
+                'http://eidas.europa.eu/LoA/low'
+            ]
+        ],
         'sp' => [
             'entityId' => 'https://nia.otevrenamesta.cz/',
             'assertionConsumerService' => [
@@ -120,21 +133,101 @@ class PagesController extends AppController
         $this->set('title', 'Informace o testovacím SeP - Service Provider');
     }
 
-    private function der2pem($der_data) {
-        $pem = chunk_split(base64_encode($der_data), 64, "\n");
-        $pem = "-----BEGIN CERTIFICATE-----\n".$pem."-----END CERTIFICATE-----\n";
-        return $pem;
-    }
-
     public function exampleStep1()
     {
         $this->set('title', 'Integrace - První krok');
+    }
 
-        $metadata_string = file_get_contents($this->metadata_url);
-        $idp_metadata = IdPMetadataParser::parseXML($metadata_string);
-        $metadata_xml_dom = Utils::loadXML(new DOMDocument(), $metadata_string);
-        $cert = $this->der2pem(base64_decode($idp_metadata['idp']['x509cert']));
-        $valid = Utils::validateSign($metadata_xml_dom, $cert);
+    public function exampleStep2()
+    {
+        $this->set('title', 'Integrace - Druhý krok');
+
+        try {
+            $idpMetadata = IdPMetadataParser::parseRemoteXML($this->metadata_url);
+            $this->example_configuration = IdPMetadataParser::injectIntoSettings($this->example_configuration, $idpMetadata);
+        } catch (Exception $e) {
+            $this->Flash->error($e->getMessage());
+        }
+        $redirect_url = "https://tnia.eidentita.cz/FPSTS/saml2/basic";
+        $authn = new AuthnRequest(new Settings($this->example_configuration));
+        dump($authn->getXML());
+    }
+
+    public function test()
+    {
+        $start = time();
+
+        $nia_container = new NiaContainer($this);
+        $service_provider = new NiaServiceProvider();
+        ContainerSingleton::setContainer($nia_container);
+
+        $idp_metadata_url = 'https://tnia.eidentita.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml';
+        $idp_metadata_contents = Cache::read('idp_metadata_contents');
+        $from_cache = true;
+        if ($idp_metadata_contents === false) {
+            $idp_metadata_contents = file_get_contents($idp_metadata_url);
+            Cache::write('idp_metadata_contents', $idp_metadata_contents);
+            $from_cache = false;
+        }
+        $this->set('metadata_from_cache', $from_cache);
+
+        $idp_metadata_domdocument = DOMDocumentFactory::fromString($idp_metadata_contents);
+        $idp_metadata_root_domelement = $idp_metadata_domdocument->getElementsByTagName('EntityDescriptor')[0];
+        $idp_descriptor = new EntityDescriptor($idp_metadata_root_domelement);
+
+        $local_tnia_cert_data = file_get_contents(WWW_ROOT . 'tnia.crt');
+        $local_tnia_cert = X509::createFromCertificateData($local_tnia_cert_data);
+
+        $local_cert_data = file_get_contents(WWW_ROOT . 'szrc-test.crt');
+        $local_cert = X509::createFromCertificateData($local_cert_data);
+
+        $nia_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
+        $nia_public_key->loadKey($local_tnia_cert_data, false, true);
+        $this->set('idp_descriptor_signature_valid', $idp_descriptor->validate($nia_public_key));
+
+        $idp_sso_descriptor = false;
+        foreach ($idp_descriptor->getRoleDescriptor() as $role_descriptor) {
+            if ($role_descriptor instanceof IDPSSODescriptor) {
+                $idp_sso_descriptor = $role_descriptor;
+            }
+        }
+        $this->set(compact('idp_sso_descriptor'));
+
+        $sso_redirect_login_url = false;
+        $sso_post_login_url = false;
+
+        if ($idp_sso_descriptor instanceof IDPSSODescriptor) {
+            foreach ($idp_sso_descriptor->getSingleSignOnService() as $descriptorType) {
+                if ($descriptorType->getBinding() === 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect') {
+                    $sso_redirect_login_url = $descriptorType->getLocation();
+                } else if ($descriptorType->getBinding() === 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST') {
+                    $sso_post_login_url = $descriptorType->getLocation();
+                }
+            }
+        }
+
+        $this->set(compact('sso_redirect_login_url', 'sso_post_login_url'));
+
+        $auth_request = new \SAML2\AuthnRequest();
+        $auth_request->setId($nia_container->generateId());
+        $auth_request->setIssuer($nia_container->getIssuer());
+        $auth_request->setDestination($sso_redirect_login_url);
+        $auth_request->setAssertionConsumerServiceURL(NiaServiceProvider::$AssertionConsumerServiceURL);
+        $auth_request->setRequestedAuthnContext([
+            'AuthnContextClassRef' => [NiaServiceProvider::LOA_LOW],
+            'Comparison' => 'minimum'
+        ]);
+
+        $auth_request_xml_domelement = $auth_request->toUnsignedXML();
+        $exts = new NiaExtensions($auth_request_xml_domelement);
+        $exts->addAllDefaultAttributes();
+        $auth_request_xml_domelement = $exts->toXML();
+        $auth_request_xml = $auth_request_xml_domelement->ownerDocument->saveXML($auth_request_xml_domelement);
+
+        $end = time();
+
+        $this->set('took', $end - $start);
+        $this->set(compact('idp_descriptor', 'local_tnia_cert', 'local_cert', 'auth_request', 'auth_request_xml'));
     }
 
     public function PrivateAccess()
@@ -156,7 +249,7 @@ class PagesController extends AppController
     {
         try {
             $idpMetadata = IdPMetadataParser::parseRemoteXML($this->metadata_url);
-            IdPMetadataParser::injectIntoSettings($this->example_configuration, $idpMetadata);
+            $this->example_configuration = IdPMetadataParser::injectIntoSettings($this->example_configuration, $idpMetadata);
         } catch (Exception $e) {
             $this->Flash->error($e->getMessage());
         }
@@ -166,5 +259,12 @@ class PagesController extends AppController
         $metadata = Metadata::addX509KeyDescriptors($metadata, $this->example_configuration['sp']['x509cert']);
         $metadata = Metadata::signMetadata($metadata, $this->example_configuration['sp']['privateKey'], $this->example_configuration['sp']['x509cert']);
         return $this->response->withType('text/xml')->withStringBody($metadata);
+    }
+
+    private function der2pem($der_data)
+    {
+        $pem = chunk_split(base64_encode($der_data), 64, "\n");
+        $pem = "-----BEGIN CERTIFICATE-----\n" . $pem . "-----END CERTIFICATE-----\n";
+        return $pem;
     }
 }
