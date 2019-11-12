@@ -26,7 +26,7 @@ use SAML2\XML\md\EntityDescriptor;
     <li>Získání adresy pro přesměrování uživatele</li>
 </ol>
 
-<h3>1. stažení souboru</h3>
+<h3>1. stažení souboru a parsování jeho dat</h3>
 <pre>
     <code class="php">
  &lt;?php

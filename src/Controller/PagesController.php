@@ -21,18 +21,15 @@ use App\Saml\NiaServiceProvider;
 use Cake\Cache\Cache;
 use Cake\Event\Event;
 use Cake\Routing\Router;
-use DOMDocument;
 use RobRichards\XMLSecLibs\XMLSecurityDSig;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use SAML2\AuthnRequest;
 use SAML2\Certificate\Key;
-use SAML2\Certificate\X509;
 use SAML2\Compat\ContainerSingleton;
 use SAML2\Constants;
 use SAML2\DOMDocumentFactory;
 use SAML2\EncryptedAssertion;
 use SAML2\Response;
-use SAML2\Utils;
 use SAML2\XML\Chunk;
 use SAML2\XML\ds\KeyInfo;
 use SAML2\XML\ds\X509Certificate;
@@ -62,31 +59,38 @@ class PagesController extends AppController
         $this->set('title', 'Informace o testovacím SeP - Service Provider');
     }
 
-    public function sepMetadata(){
-        $this->set('title','SeP - Metadata (EntityDescriptor / SPSSODescriptor)');
+    public function sepMetadata()
+    {
+        $this->set('title', 'SeP - Metadata (EntityDescriptor / SPSSODescriptor)');
     }
 
     public function exampleStep2()
     {
         $this->exampleStep1();
         $this->set('title', 'Integrace - Druhý krok');
+        $idp_descriptor = $this->getIdpDescriptor();
+        $signed_request = $this->generateAuthnRequest($idp_descriptor);
 
+        $xml = $signed_request->ownerDocument->saveXML();
+        $query = gzdeflate($xml);
+        $query = base64_encode($query);
+        $query = urlencode($query);
 
+        $urls = $this->extractSSOLoginUrls($idp_descriptor);
+        $sso_redirect_login_url = $urls[Constants::BINDING_HTTP_REDIRECT];
+
+        $link = $sso_redirect_login_url . '?SAMLRequest=' . $query;
+
+        $this->set(compact('signed_request', 'query', 'link'));
     }
 
     public function exampleStep1()
     {
         $this->set('title', 'Integrace - První krok');
 
-        $metadata_string = $this->getIdpMetadataContents();
-        $metadata_dom = DOMDocumentFactory::fromString($metadata_string);
-        try {
-            $metadata = new EntityDescriptor($metadata_dom->documentElement);
-            $this->set(compact('metadata'));
-            $this->set('urls', $this->extractSSOLoginUrls($metadata));
-        } catch (\Exception $e) {
-            $this->Flash->error($e->getMessage());
-        }
+        $metadata = $this->getIdpDescriptor();
+        $this->set(compact('metadata'));
+        $this->set('urls', $this->extractSSOLoginUrls($metadata));
 
         $local_tnia_cert_data = file_get_contents(WWW_ROOT . 'tnia.crt');
         try {
@@ -99,6 +103,18 @@ class PagesController extends AppController
             $this->Flash->error($e->getMessage());
         }
 
+    }
+
+    private function getIdpDescriptor()
+    {
+        $metadata_string = $this->getIdpMetadataContents();
+        $metadata_dom = DOMDocumentFactory::fromString($metadata_string);
+        try {
+            return new EntityDescriptor($metadata_dom->documentElement);
+        } catch (\Exception $e) {
+            $this->Flash->error($e->getMessage());
+        }
+        return false;
     }
 
     private function getIdpMetadataContents()
@@ -141,38 +157,14 @@ class PagesController extends AppController
         return [Constants::BINDING_HTTP_REDIRECT => $sso_redirect_login_url, Constants::BINDING_HTTP_POST => $sso_post_login_url];
     }
 
-    public function test()
+    private function generateAuthnRequest(EntityDescriptor $idp_descriptor)
     {
-        $start = time();
-
         $nia_container = new NiaContainer($this);
         $service_provider = new NiaServiceProvider();
         ContainerSingleton::setContainer($nia_container);
 
-        $idp_metadata_contents = $this->getIdpMetadataContents();
-
-        $idp_metadata_domdocument = DOMDocumentFactory::fromString($idp_metadata_contents);
-        $idp_metadata_root_domelement = $idp_metadata_domdocument->getElementsByTagName('EntityDescriptor')[0];
-        $idp_descriptor = new EntityDescriptor($idp_metadata_root_domelement);
-
-        $local_tnia_cert_data = file_get_contents(WWW_ROOT . 'tnia.crt');
-        $local_tnia_cert = X509::createFromCertificateData($local_tnia_cert_data);
-
-        $local_cert_data = file_get_contents(WWW_ROOT . 'szrc-test.crt');
-        $local_cert = X509::createFromCertificateData($local_cert_data);
-
-        $nia_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
-        $nia_public_key->loadKey($local_tnia_cert_data, false, true);
-        $this->set('idp_descriptor_signature_valid', $idp_descriptor->validate($nia_public_key));
-
-        $local_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'private']);
-        $local_public_key->loadKey(file_get_contents(CONFIG . 'private.key'), false, false);
-
         $urls = $this->extractSSOLoginUrls($idp_descriptor);
-        $sso_post_login_url = $urls[Constants::BINDING_HTTP_POST];
         $sso_redirect_login_url = $urls[Constants::BINDING_HTTP_REDIRECT];
-
-        $this->set(compact('sso_redirect_login_url', 'sso_post_login_url'));
 
         $auth_request = new AuthnRequest();
         $auth_request->setId($nia_container->generateId());
@@ -193,20 +185,35 @@ class PagesController extends AppController
         $auth_request_xml = $auth_request_xml_domelement->ownerDocument->saveXML($auth_request_xml_domelement);
         $auth_request_xml_domelement = DOMDocumentFactory::fromString($auth_request_xml);
 
-        Utils::insertSignature($local_public_key, [$local_cert_data], $auth_request_xml_domelement->documentElement, $auth_request_xml_domelement->getElementsByTagName('Issuer')->item(0)->nextSibling);
+        $auth_request_xml_domelement = $service_provider->insertSignature($auth_request_xml_domelement->documentElement);
 
-        /** @var DOMDocument $auth_request_xml_domelement */
-        $auth_request_xml = $auth_request_xml_domelement->saveXML();
+        return $auth_request_xml_domelement;
+    }
+
+    public function test()
+    {
+        $start = microtime(true);
+
+        $idp_descriptor = $this->getIdpDescriptor();
+        $this->set(compact('idp_descriptor'));
+        $this->set('urls', $this->extractSSOLoginUrls($idp_descriptor));
+
+        $auth_request_xml = $this->generateAuthnRequest($idp_descriptor);
+        $auth_request_xml = $auth_request_xml->ownerDocument->saveXML();
 
         $auth_request_encoded = gzdeflate($auth_request_xml);
         $auth_request_encoded = base64_encode($auth_request_encoded);
         $auth_request_encoded = urlencode($auth_request_encoded);
 
+
+        $urls = $this->extractSSOLoginUrls($idp_descriptor);
+        $sso_redirect_login_url = $urls[Constants::BINDING_HTTP_REDIRECT];
+
         $link = $sso_redirect_login_url . '?SAMLRequest=' . $auth_request_encoded;
 
-        $end = time();
+        $end = microtime(true);
 
-        $this->set('took', $end - $start);
+        $this->set('took', sprintf("%f %f %f", $start, $end, $end - $start));
         $this->set(compact('idp_descriptor', 'local_tnia_cert', 'local_cert', 'auth_request', 'auth_request_xml', 'auth_request_encoded', 'link'));
     }
 
@@ -250,6 +257,13 @@ class PagesController extends AppController
     }
 
     public function SePConfiguration()
+    {
+        $metadata_dom_signed = $this->generateSePMetadata();
+
+        return $this->response->withType('text/xml')->withStringBody($metadata_dom_signed->ownerDocument->saveXML());
+    }
+
+    private function generateSePMetadata()
     {
         $service_provider = new NiaServiceProvider();
         $nia_container = new NiaContainer($this);
@@ -336,8 +350,7 @@ class PagesController extends AppController
         $metadata_dom->appendChild($extensions);
 
         $metadata_dom_signed = $service_provider->insertSignature($metadata_dom);
-
-        return $this->response->withType('text/xml')->withStringBody($metadata_dom_signed->ownerDocument->saveXML());
+        return $metadata_dom_signed;
     }
 
 }

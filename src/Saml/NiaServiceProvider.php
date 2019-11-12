@@ -13,7 +13,7 @@ class NiaServiceProvider extends ServiceProvider
     const LOA_SUBSTANTIAL = 'http://eidas.europa.eu/LoA/substantial';
     const LOA_HIGH = 'http://eidas.europa.eu/LoA/high';
 
-    public static $AssertionConsumerServiceURL = 'https://nia.otevrenamesta.cz/ExternalLogin';
+    public static $AssertionConsumerServiceURL = 'https://nia.otevrenamesta.cz/ExtenalLogin';
     public static $IssuerURL = 'https://nia.otevrenamesta.cz/';
 
     public function __construct()
