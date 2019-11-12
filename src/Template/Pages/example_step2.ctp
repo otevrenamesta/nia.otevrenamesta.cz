@@ -2,6 +2,8 @@
 /**
  * @var $this AppView
  * @var $title string
+ * @var $link string
+ * @var $signed_request DOMElement
  */
 
 use App\View\AppView; ?>
@@ -84,7 +86,9 @@ use App\View\AppView; ?>
     <li>eidas:RequestedAttributes - obsahuje seznam požadovaných informací o identitě, a zda jsou tyto vyžadovány
         (atribut isRequired) či nikoliv
     </li>
-    <li>Požadavek musí být podepsán privátním klíčem, který odpovídá certifikátu v SeP metadatech (příp. v konfiguraci SeP v administraci NIA)</li>
+    <li>Požadavek musí být podepsán privátním klíčem, který odpovídá certifikátu v SeP metadatech (příp. v konfiguraci
+        SeP v administraci NIA)
+    </li>
 </ul>
 
 <pre>
@@ -141,5 +145,10 @@ echo str_replace('<', '&lt;', $signed_request->ownerDocument->saveXML())
 
 <h2>Další krok</h2>
 <p>Otevřením finální URL se spustí proces autorizace u NIA, jeho dokončením se vrátíte na tento tutoriál na Krok 3</p>
+<aside>
+    <p>Vzhledem k tomu že se jedná o NIA testovací prostředí, požadavek může z různých důvodů selhat i bez chyb na
+        straně SeP</p>
+    <p>V takovém případě se vraťte na tuto stránku a proces autorizace kliknutím spusťte znovu</p>
+</aside>
 
-<h2><a href="<?= $link ?>">Otevřít finální URL</a></h2>
+<h2><a href="<?= $link ?>" target="_blank">Otevřít finální URL</a></h2>
