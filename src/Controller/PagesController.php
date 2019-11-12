@@ -135,12 +135,6 @@ class PagesController extends AppController
     public function idpInfo()
     {
         $this->set('title', 'Informace o NIA IdP - Identity Provider');
-        try {
-            $metadata = IdPMetadataParser::parseRemoteXML($this->metadata_url);
-            $this->set(compact('metadata'));
-        } catch (Exception $e) {
-            $this->Flash->error($e->getMessage());
-        }
     }
 
     public function sepInfo()
@@ -151,31 +145,24 @@ class PagesController extends AppController
     public function exampleStep1()
     {
         $this->set('title', 'Integrace - První krok');
+
+        $metadata_string = $this->getIdpMetadataContents();
+        $metadata_dom = DOMDocumentFactory::fromString($metadata_string);
+        $metadata = new EntityDescriptor($metadata_dom->documentElement);
+        $this->set(compact('metadata'));
+
+        $local_tnia_cert_data = file_get_contents(WWW_ROOT . 'tnia.crt');
+        $tnia_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
+        $tnia_key->loadKey($local_tnia_cert_data, false, true);
+
+        $valid = $metadata->validate($tnia_key);
+        $this->set(compact('valid'));
+
+        $this->set('urls', $this->extractSSOLoginUrls($metadata));
     }
 
-    public function exampleStep2()
+    private function getIdpMetadataContents()
     {
-        $this->set('title', 'Integrace - Druhý krok');
-
-        try {
-            $idpMetadata = IdPMetadataParser::parseRemoteXML($this->metadata_url);
-            $this->example_configuration = IdPMetadataParser::injectIntoSettings($this->example_configuration, $idpMetadata);
-        } catch (Exception $e) {
-            $this->Flash->error($e->getMessage());
-        }
-        $redirect_url = "https://tnia.eidentita.cz/FPSTS/saml2/basic";
-        $authn = new AuthnRequest(new Settings($this->example_configuration));
-        dump($authn->getXML());
-    }
-
-    public function test()
-    {
-        $start = time();
-
-        $nia_container = new NiaContainer($this);
-        $service_provider = new NiaServiceProvider();
-        ContainerSingleton::setContainer($nia_container);
-
         $idp_metadata_url = 'https://tnia.eidentita.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml';
         $idp_metadata_contents = Cache::read('idp_metadata_contents');
         $from_cache = true;
@@ -185,24 +172,11 @@ class PagesController extends AppController
             $from_cache = false;
         }
         $this->set('metadata_from_cache', $from_cache);
+        return $idp_metadata_contents;
+    }
 
-        $idp_metadata_domdocument = DOMDocumentFactory::fromString($idp_metadata_contents);
-        $idp_metadata_root_domelement = $idp_metadata_domdocument->getElementsByTagName('EntityDescriptor')[0];
-        $idp_descriptor = new EntityDescriptor($idp_metadata_root_domelement);
-
-        $local_tnia_cert_data = file_get_contents(WWW_ROOT . 'tnia.crt');
-        $local_tnia_cert = X509::createFromCertificateData($local_tnia_cert_data);
-
-        $local_cert_data = file_get_contents(WWW_ROOT . 'szrc-test.crt');
-        $local_cert = X509::createFromCertificateData($local_cert_data);
-
-        $nia_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
-        $nia_public_key->loadKey($local_tnia_cert_data, false, true);
-        $this->set('idp_descriptor_signature_valid', $idp_descriptor->validate($nia_public_key));
-
-        $local_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'private']);
-        $local_public_key->loadKey(file_get_contents(CONFIG . 'private.key'), false, false);
-
+    private function extractSSOLoginUrls(EntityDescriptor $idp_descriptor)
+    {
         $idp_sso_descriptor = false;
         foreach ($idp_descriptor->getRoleDescriptor() as $role_descriptor) {
             if ($role_descriptor instanceof IDPSSODescriptor) {
@@ -223,6 +197,47 @@ class PagesController extends AppController
                 }
             }
         }
+
+        return [Constants::BINDING_HTTP_REDIRECT => $sso_redirect_login_url, Constants::BINDING_HTTP_POST => $sso_post_login_url];
+    }
+
+    public function exampleStep2()
+    {
+        $this->exampleStep1();
+        $this->set('title', 'Integrace - Druhý krok');
+
+    }
+
+    public function test()
+    {
+        $start = time();
+
+        $nia_container = new NiaContainer($this);
+        $service_provider = new NiaServiceProvider();
+        ContainerSingleton::setContainer($nia_container);
+
+        $idp_metadata_contents = $this->getIdpMetadataContents();
+
+        $idp_metadata_domdocument = DOMDocumentFactory::fromString($idp_metadata_contents);
+        $idp_metadata_root_domelement = $idp_metadata_domdocument->getElementsByTagName('EntityDescriptor')[0];
+        $idp_descriptor = new EntityDescriptor($idp_metadata_root_domelement);
+
+        $local_tnia_cert_data = file_get_contents(WWW_ROOT . 'tnia.crt');
+        $local_tnia_cert = X509::createFromCertificateData($local_tnia_cert_data);
+
+        $local_cert_data = file_get_contents(WWW_ROOT . 'szrc-test.crt');
+        $local_cert = X509::createFromCertificateData($local_cert_data);
+
+        $nia_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
+        $nia_public_key->loadKey($local_tnia_cert_data, false, true);
+        $this->set('idp_descriptor_signature_valid', $idp_descriptor->validate($nia_public_key));
+
+        $local_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'private']);
+        $local_public_key->loadKey(file_get_contents(CONFIG . 'private.key'), false, false);
+
+        $urls = $this->extractSSOLoginUrls($idp_descriptor);
+        $sso_post_login_url = $urls[Constants::BINDING_HTTP_POST];
+        $sso_redirect_login_url = $urls[Constants::BINDING_HTTP_REDIRECT];
 
         $this->set(compact('sso_redirect_login_url', 'sso_post_login_url'));
 
@@ -387,7 +402,7 @@ class PagesController extends AppController
         $metadata_dom->appendChild($extensions);
 
         $metadata_dom_signed = $service_provider->insertSignature($metadata_dom);
-        
+
         return $this->response->withType('text/xml')->withStringBody($metadata_dom_signed->ownerDocument->saveXML());
     }
 
