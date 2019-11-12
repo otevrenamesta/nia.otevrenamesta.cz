@@ -22,7 +22,6 @@ use Cake\Cache\Cache;
 use Cake\Event\Event;
 use Cake\Routing\Router;
 use DOMDocument;
-use Exception;
 use RobRichards\XMLSecLibs\XMLSecurityDSig;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 use SAML2\AuthnRequest;
@@ -49,85 +48,6 @@ use SAML2\XML\md\SPSSODescriptor;
 class PagesController extends AppController
 {
 
-    private $metadata_url = "https://tnia.eidentita.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml";
-    private $example_configuration = [
-        'strict' => false,
-        'debug' => true,
-        'baseurl' => 'https://nia.otevrenamesta.cz/',
-        'security' => [
-            'requestedAuthnContextComparison' => 'minimum',
-            'requestedAuthnContext' => [
-                'http://eidas.europa.eu/LoA/low'
-            ]
-        ],
-        'sp' => [
-            'entityId' => 'https://nia.otevrenamesta.cz/',
-            'assertionConsumerService' => [
-                'url' => 'https://nia.otevrenamesta.cz/ExternalLogin',
-                'binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
-            ],
-            "attributeConsumingService" => [
-                "serviceName" => "Otevřená Města",
-                "serviceDescription" => "Otevřená Města",
-                "requestedAttributes" => [
-                    [
-                        "name" => "http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName",
-                        "isRequired" => false,
-                        "nameFormat" => "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                        "friendlyName" => "CurrentFamilyName",
-                        "attributeValue" => ""
-                    ],
-                    [
-                        "name" => "http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier",
-                        "isRequired" => false,
-                        "nameFormat" => "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                        "friendlyName" => "PersonIdentifier",
-                        "attributeValue" => ""
-                    ],
-                    [
-                        "name" => "http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName",
-                        "isRequired" => false,
-                        "nameFormat" => "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                        "friendlyName" => "CurrentGivenName",
-                        "attributeValue" => ""
-                    ],
-                    [
-                        "name" => "http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName",
-                        "isRequired" => false,
-                        "nameFormat" => "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                        "friendlyName" => "CurrentFamilyName",
-                        "attributeValue" => ""
-                    ],
-                    [
-                        "name" => "http://eidas.europa.eu/attributes/naturalperson/CurrentAddress",
-                        "isRequired" => false,
-                        "nameFormat" => "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                        "friendlyName" => "CurrentAddress",
-                        "attributeValue" => ""
-                    ],
-                    [
-                        "name" => "http://eidas.europa.eu/attributes/naturalperson/DateOfBirth",
-                        "isRequired" => false,
-                        "nameFormat" => "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                        "friendlyName" => "DateOfBirth",
-                        "attributeValue" => ""
-                    ],
-                ]
-            ],
-            'singleLogoutService' => [
-                // URL Location where the <Response> from the IdP will be returned
-                'url' => 'https://nia.otevrenamesta.cz/ExternalLogout',
-                // SAML protocol binding to be used when returning the <Response>
-                // message.  Onelogin Toolkit supports for this endpoint the
-                // HTTP-Redirect binding only
-                'binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
-            ],
-            'NameIDFormat' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:entity',
-            'x509cert' => 'MIIDdDCCAlygAwIBAgIRAP9sUbldL412M4EpX2fV5PwwDQYJKoZIhvcNAQELBQAwJDEiMCAGA1UEAwwZaHR0cHM6Ly9vdGV2cmVuYW1lc3RhLmN6LzAeFw0xOTEwMDEwOTM1MjhaFw0yMjA5MTUwOTM1MjhaMBQxEjAQBgNVBAMMCXN6cmMtdGVzdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL7C+gGDVHuZSYz2MDq21UB/e3UXiU7L3iJvv8GEzJoi+SvauCU/Ui5oGc/w2MqZ21E463aDadjksRFSB+9z/uw2yNna+Wctg2RoY4CMZNdp/MxunRIT9/U0ecXVHPcqsnTnVykK1QYUv8BaGHLQH0Okk/7+SWHR/MMXcJ7OTI4owm8bFRKN/PFaUtCSNYxhUnP51quWwx6EXoHXZWAq//7YCZP+WL7dcmnql4JxjpZGq4lINqCGA8WXw0EuXbUs5vakl5SFmDMezmiO5IEi1Mk5vmv649p2gUa4qpVPgHkhCqOSRB0BAeEh63hZM05Z+HkDb6R8VYAdFW3ZEL0lXw8CAwEAAaOBsDCBrTAJBgNVHRMEAjAAMB0GA1UdDgQWBBRJIq+FqevCnV5u7guRRfs8k4KbmDBfBgNVHSMEWDBWgBTypM00nD30BAjXOIrO8l6xFnzxvaEopCYwJDEiMCAGA1UEAwwZaHR0cHM6Ly9vdGV2cmVuYW1lc3RhLmN6L4IUdCc7pFsR+OGBk+abd7ssRaIIM1EwEwYDVR0lBAwwCgYIKwYBBQUHAwIwCwYDVR0PBAQDAgeAMA0GCSqGSIb3DQEBCwUAA4IBAQBHSwJPSnC6G+978X/Lk4UMx1QMXmUpvaWnELBMyAcdpRsN9RsOsiJKLYiTAHFLHDwAF0cd/2ZxcwqHu2dX2jwVfOE+Z3UhHEBmvLTPBQq96y62KO4Px7//6gQchK+zER5ZfOP7jAqqziIu+SuI4xJ3zBgEGb4wr3EdQqonNnk6rZh7uJlnCWaoZACg5+S97aK77HaJgk775lFYhDiuQBRD6GKLJoqR1Yvg12RN0X1UbCV5hUF0UEOgHhbNNmZIU9qrKeVKefekDSjzd8xDIU6Ic5w3gKS01CecLQL7/tSpi/s3X+1f4yTjozurqNjUV7gBxcyYRw+4vE4aa4qx/gWd',
-            'privateKey' => ''
-        ]
-    ];
-
     public function intro()
     {
     }
@@ -142,23 +62,38 @@ class PagesController extends AppController
         $this->set('title', 'Informace o testovacím SeP - Service Provider');
     }
 
+    public function exampleStep2()
+    {
+        $this->exampleStep1();
+        $this->set('title', 'Integrace - Druhý krok');
+
+    }
+
     public function exampleStep1()
     {
         $this->set('title', 'Integrace - První krok');
 
         $metadata_string = $this->getIdpMetadataContents();
         $metadata_dom = DOMDocumentFactory::fromString($metadata_string);
-        $metadata = new EntityDescriptor($metadata_dom->documentElement);
-        $this->set(compact('metadata'));
+        try {
+            $metadata = new EntityDescriptor($metadata_dom->documentElement);
+            $this->set(compact('metadata'));
+            $this->set('urls', $this->extractSSOLoginUrls($metadata));
+        } catch (\Exception $e) {
+            $this->Flash->error($e->getMessage());
+        }
 
         $local_tnia_cert_data = file_get_contents(WWW_ROOT . 'tnia.crt');
-        $tnia_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
-        $tnia_key->loadKey($local_tnia_cert_data, false, true);
+        try {
+            $tnia_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
+            $tnia_key->loadKey($local_tnia_cert_data, false, true);
 
-        $valid = $metadata->validate($tnia_key);
-        $this->set(compact('valid'));
+            $valid = $metadata->validate($tnia_key);
+            $this->set(compact('valid'));
+        } catch (\Exception $e) {
+            $this->Flash->error($e->getMessage());
+        }
 
-        $this->set('urls', $this->extractSSOLoginUrls($metadata));
     }
 
     private function getIdpMetadataContents()
@@ -199,13 +134,6 @@ class PagesController extends AppController
         }
 
         return [Constants::BINDING_HTTP_REDIRECT => $sso_redirect_login_url, Constants::BINDING_HTTP_POST => $sso_post_login_url];
-    }
-
-    public function exampleStep2()
-    {
-        $this->exampleStep1();
-        $this->set('title', 'Integrace - Druhý krok');
-
     }
 
     public function test()

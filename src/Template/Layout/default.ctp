@@ -70,6 +70,7 @@ use App\View\AppView; ?>
 
     <div class="content pure-u-1 pure-u-md-3-4">
         <div class="bottom-spacing">
+            <?= $this->Flash->render() ?>
             <?= $this->fetch('content') ?>
         </div>
         <div class="footer">
