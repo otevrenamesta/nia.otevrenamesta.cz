@@ -76,8 +76,8 @@ use App\View\AppView; ?>
         <div class="footer">
             <div class="pure-menu pure-menu-horizontal">
                 <ul>
-                    <li class="pure-menu-item"><a class="pure-menu-link"
-                                                  href="https://github.com/otevrenamesta/eidentita-example">Github</a>
+                    <li class="pure-menu-item">
+                        <a class="pure-menu-link" href="https://github.com/otevrenamesta/eidentita-example">Github</a>
                     </li>
                 </ul>
             </div>

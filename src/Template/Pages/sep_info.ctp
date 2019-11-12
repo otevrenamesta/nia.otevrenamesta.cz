@@ -48,19 +48,24 @@ use App\View\AppView; ?>
     <li>Pokud je tato konfigurace vč. certifikátu, lze jej použít pro dynamickou aktualizaci certifikátu, místo statické
         konfigurace na portále eIdentita
     </li>
+    <li>Formát metadat je SAML2.0 EntityDescriptor, v
+        dokumentaci <?= $this->Html->link('eIDAS Message Format v1.2.pdf', 'https://ec.europa.eu/cefdigital/wiki/download/attachments/82773108/eIDAS%20SAML%20Message%20Format%20v.1.2%20Final.pdf?version=3&modificationDate=1571068651727&api=v2') ?>
+        , příklad v sekci 6.1, popisující formát metadat na straně SeP
+    </li>
 </ul>
 <h4>Adresa pro příjem vydaného tokenu (AuthResponse)</h4>
 <ul>
     <li>URL na kterou bude přesměrován uživatel, která zajistí verifikaci a použití vráceného SAML AuthResponse</li>
     <li>Použitá metoda bude HTTP-REDIRECT nebo HTTP-POST (dle IdP metadat SingleSignOnService )</li>
+    <li>V SAML2 AuthnRequest jde o parametr Audience</li>
 </ul>
 <h4>Adresa pro přesměrování uživatele po odhlášení (LogoutResponse)</h4>
 <ul>
     <li>URL na kterou bude uživatel přesměrován po odhlášení</li>
-    <li>Použitá metoda bude HTTP-REDIRECT (dle IdP metadat SingleLogoutService)</li>
+    <li>Použitá metoda bude HTTP-REDIRECT</li>
 </ul>
 <h4>Unikátní URL adresa zabezpečené části Vašeho webu</h4>
 <ul>
     <li>Nejedná se o nutně existující URL adresu, ale především o unikátní identifikátor SeP</li>
-    <li>Tento identifikátor se používá v AuthnResponse jako parametr AudienceRestriction/Audience</li>
+    <li>V SAML2 AuthnRequest jde o parametr Issuer</li>
 </ul>

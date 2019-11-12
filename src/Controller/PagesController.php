@@ -67,6 +67,7 @@ class PagesController extends AppController
         $this->exampleStep1();
         $this->set('title', 'Integrace - Druhý krok');
 
+
     }
 
     public function exampleStep1()
@@ -178,6 +179,7 @@ class PagesController extends AppController
             'AuthnContextClassRef' => [NiaServiceProvider::LOA_LOW],
             'Comparison' => 'minimum'
         ]);
+        $auth_request->setAudiences([NiaServiceProvider::$AssertionConsumerServiceURL]);
 
         $auth_request_xml_domelement = $auth_request->toUnsignedXML();
         $exts = new NiaExtensions($auth_request_xml_domelement);
