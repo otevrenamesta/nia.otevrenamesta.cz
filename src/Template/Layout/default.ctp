@@ -47,15 +47,15 @@ use App\View\AppView; ?>
                     </li>
                     <li class="nav-item">
                         <a class="pure-button"
-                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'idpInfo']) ?>">IdP -
-                            Úvod</a>
+                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'sepMetadata']) ?>">SeP -
+                            Metadata</a>
                     </li>
                 </ul>
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a class="pure-button"
-                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'sepMetadata']) ?>">SeP -
-                            Metadata</a>
+                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'idpInfo']) ?>">IdP -
+                            Úvod</a>
                     </li>
                 </ul>
                 <h2>Ukázková implementace</h2>
