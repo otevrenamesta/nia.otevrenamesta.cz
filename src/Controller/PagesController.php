@@ -20,19 +20,31 @@ use App\Saml\NiaExtensions;
 use App\Saml\NiaServiceProvider;
 use Cake\Cache\Cache;
 use Cake\Event\Event;
+use Cake\Routing\Router;
 use DOMDocument;
 use Exception;
+use RobRichards\XMLSecLibs\XMLSecurityDSig;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
+use SAML2\AuthnRequest;
+use SAML2\Certificate\Key;
 use SAML2\Certificate\X509;
 use SAML2\Compat\ContainerSingleton;
-use SAML2\Configuration\ServiceProvider;
 use SAML2\Constants;
 use SAML2\DOMDocumentFactory;
 use SAML2\EncryptedAssertion;
 use SAML2\Response;
 use SAML2\Utils;
+use SAML2\XML\Chunk;
+use SAML2\XML\ds\KeyInfo;
+use SAML2\XML\ds\X509Certificate;
+use SAML2\XML\ds\X509Data;
+use SAML2\XML\md\ContactPerson;
 use SAML2\XML\md\EntityDescriptor;
 use SAML2\XML\md\IDPSSODescriptor;
+use SAML2\XML\md\IndexedEndpointType;
+use SAML2\XML\md\KeyDescriptor;
+use SAML2\XML\md\Organization;
+use SAML2\XML\md\SPSSODescriptor;
 
 class PagesController extends AppController
 {
@@ -206,7 +218,7 @@ class PagesController extends AppController
             foreach ($idp_sso_descriptor->getSingleSignOnService() as $descriptorType) {
                 if ($descriptorType->getBinding() === Constants::BINDING_HTTP_REDIRECT) {
                     $sso_redirect_login_url = $descriptorType->getLocation();
-                } else if ($descriptorType->getBinding() === 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST') {
+                } else if ($descriptorType->getBinding() === Constants::BINDING_HTTP_POST) {
                     $sso_post_login_url = $descriptorType->getLocation();
                 }
             }
@@ -214,7 +226,7 @@ class PagesController extends AppController
 
         $this->set(compact('sso_redirect_login_url', 'sso_post_login_url'));
 
-        $auth_request = new \SAML2\AuthnRequest();
+        $auth_request = new AuthnRequest();
         $auth_request->setId($nia_container->generateId());
         $auth_request->setIssuer($nia_container->getIssuer());
         $auth_request->setDestination($sso_redirect_login_url);
@@ -290,20 +302,93 @@ class PagesController extends AppController
 
     public function SePConfiguration()
     {
+        $service_provider = new NiaServiceProvider();
+        $nia_container = new NiaContainer($this);
+        ContainerSingleton::setContainer($nia_container);
 
+        $descriptor = new EntityDescriptor();
 
-        try {
-            $idpMetadata = IdPMetadataParser::parseRemoteXML($this->metadata_url);
-            $this->example_configuration = IdPMetadataParser::injectIntoSettings($this->example_configuration, $idpMetadata);
-        } catch (Exception $e) {
-            $this->Flash->error($e->getMessage());
-        }
-        $this->example_configuration['sp']['privateKey'] = file_get_contents(CONFIG . 'private.key');
+        $contact = new ContactPerson();
+        $contact->setContactType('technical');
+        $contact->setCompany('Otevřená Města z.s.');
+        $contact->setGivenName('Marek');
+        $contact->setSurName('Sebera');
+        $contact->setEmailAddress(['marek.sebera@gmail.com']);
 
-        $metadata = Metadata::builder($this->example_configuration['sp'], true, true);
-        $metadata = Metadata::addX509KeyDescriptors($metadata, $this->example_configuration['sp']['x509cert']);
-        $metadata = Metadata::signMetadata($metadata, $this->example_configuration['sp']['privateKey'], $this->example_configuration['sp']['x509cert']);
-        return $this->response->withType('text/xml')->withStringBody($metadata);
+        $org = new Organization();
+        $org->setOrganizationDisplayName(['cz' => 'Otevřená Města z.s.']);
+        $org->setOrganizationName(['cz' => 'Otevřená Města z.s.']);
+        $org->setOrganizationURL(['cz' => 'https://github.com/otevrenamesta/eidentita-example']);
+
+        $local_cert_x509_cert = new X509Certificate();
+        $local_cert_x509_cert->setCertificate($service_provider->getCertificateData());
+        $local_cert_x509_data = new X509Data();
+        $local_cert_x509_data->setData([$local_cert_x509_cert]);
+
+        $key_info = new KeyInfo();
+        $key_info->addInfo($local_cert_x509_data);
+
+        $sign_key_descriptor = new KeyDescriptor();
+        $sign_key_descriptor->setUse(Key::USAGE_SIGNING);
+        $sign_key_descriptor->setKeyInfo($key_info);
+
+        $enc_key_descriptor = new KeyDescriptor();
+        $enc_key_descriptor->setUse(Key::USAGE_ENCRYPTION);
+        $enc_key_descriptor->setKeyInfo($key_info);
+
+        $doc = DOMDocumentFactory::create();
+        $enc_method_dom = $doc->createElementNS('urn:oasis:names:tc:SAML:2.0:metadata', 'EncryptionMethod');
+        $enc_method_dom->setAttribute('Algorithm', XMLSecurityKey::AES256_CBC);
+        $enc_method = new Chunk($enc_method_dom);
+
+        $enc_key_descriptor->setEncryptionMethod([$enc_method]);
+
+        $acs = new IndexedEndpointType();
+        $acs->setIsDefault(true);
+        $acs->setBinding(Constants::BINDING_HTTP_POST);
+        $acs->setIndex(1);
+        $acs->setLocation(Router::url(['action' => 'ExternalLogin', 'controller' => 'Pages'], true));
+
+        $spsso = new SPSSODescriptor();
+        $spsso->setAuthnRequestsSigned(true);
+        $spsso->setWantAssertionsSigned(true);
+        $spsso->addProtocolSupportEnumeration('urn:oasis:names:tc:SAML:2.0:protocol');
+        $spsso->addKeyDescriptor($sign_key_descriptor);
+        $spsso->addKeyDescriptor($enc_key_descriptor);
+        $spsso->setOrganization($org);
+        $spsso->addContactPerson($contact);
+        $spsso->addAssertionConsumerService($acs);
+        $spsso->setNameIDFormat([
+            Constants::NAMEFORMAT_BASIC,
+            Constants::NAMEFORMAT_UNSPECIFIED,
+            Constants::NAMEFORMAT_URI
+        ]);
+
+        $descriptor->addRoleDescriptor($spsso);
+
+        $descriptor->setID($nia_container->generateId());
+        $descriptor->setEntityID($service_provider->getEntityId());
+        $descriptor->setValidUntil(strtotime('next monday', strtotime('tomorrow')));
+
+        $metadata_dom = $descriptor->toXML();
+
+        $extensions = $metadata_dom->ownerDocument->createElementNS('urn:oasis:names:tc:SAML:2.0:metadata', 'md:Extensions');
+        $sptype = $metadata_dom->ownerDocument->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:SPType');
+        $sptype->nodeValue = 'public';
+        $extensions->appendChild($sptype);
+        $digest_method = $metadata_dom->ownerDocument->createElementNS('urn:oasis:names:tc:SAML:metadata:algsupport', 'alg:DigestMethod');
+        $digest_method->setAttribute('Algorithm', XMLSecurityDSig::SHA256);
+        $extensions->appendChild($digest_method);
+        $signing_method = $metadata_dom->ownerDocument->createElementNS('urn:oasis:names:tc:SAML:metadata:algsupport', 'alg:SigningMethod');
+        $signing_method->setAttribute('MinKeySize', 256);
+        $signing_method->setAttribute('Algorithm', XMLSecurityKey::RSA_SHA256);
+        $extensions->appendChild($signing_method);
+
+        $metadata_dom->appendChild($extensions);
+
+        $metadata_dom_signed = $service_provider->insertSignature($metadata_dom);
+        
+        return $this->response->withType('text/xml')->withStringBody($metadata_dom_signed->ownerDocument->saveXML());
     }
 
 }

@@ -28,7 +28,7 @@ class NiaContainer extends AbstractContainer
     public function generateId(): string
     {
         if ($this->id === false) {
-            $this->id = Text::uuid();
+            $this->id = '_' . Text::uuid();
         }
         return $this->id;
     }
@@ -119,7 +119,7 @@ class NiaContainer extends AbstractContainer
     public function getIssuer(): Issuer
     {
         $issuer = new Issuer();
-        $issuer->setValue('https://nia.otevrenamesta.cz/PrivateAccess');
+        $issuer->setValue(NiaServiceProvider::$IssuerURL);
         return $issuer;
     }
 }

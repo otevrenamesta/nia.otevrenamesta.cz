@@ -135,6 +135,7 @@ class NiaExtensions
 
         // set SPType always
         $sptype = $doc->createElementNS('http://eidas.europa.eu/saml-extensions', 'eidas:SPType');
+        $sptype->nodeValue = $this->sptype;
         $extensions->appendChild($sptype);
 
         // set eidas:RequestedAttributes if any defined
