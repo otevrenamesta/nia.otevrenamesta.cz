@@ -58,7 +58,7 @@ use App\View\AppView; ?>
                             Metadata</a>
                     </li>
                 </ul>
-                <h2>Ukázkový průchod</h2>
+                <h2>Ukázková implementace</h2>
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a class="pure-button"
