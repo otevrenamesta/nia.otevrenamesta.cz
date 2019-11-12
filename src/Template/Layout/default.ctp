@@ -51,6 +51,13 @@ use App\View\AppView; ?>
                             Úvod</a>
                     </li>
                 </ul>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="pure-button"
+                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'sepMetadata']) ?>">SeP -
+                            Metadata</a>
+                    </li>
+                </ul>
                 <h2>Ukázkový průchod</h2>
                 <ul class="nav-list">
                     <li class="nav-item">

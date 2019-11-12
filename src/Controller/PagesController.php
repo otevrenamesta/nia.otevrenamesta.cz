@@ -62,6 +62,10 @@ class PagesController extends AppController
         $this->set('title', 'Informace o testovacím SeP - Service Provider');
     }
 
+    public function sepMetadata(){
+        $this->set('title','SeP - Metadata (EntityDescriptor / SPSSODescriptor)');
+    }
+
     public function exampleStep2()
     {
         $this->exampleStep1();

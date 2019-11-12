@@ -30,6 +30,7 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/', ['controller' => 'Pages', 'action' => 'intro']);
     $routes->connect('/idp-info', ['controller' => 'Pages', 'action' => 'idpInfo']);
     $routes->connect('/sep-info', ['controller' => 'Pages', 'action' => 'sepInfo']);
+    $routes->connect('/sep-info-metadata', ['controller' => 'Pages', 'action' => 'sepMetadata']);
 
     $routes->connect('/PrivateAccess', ['controller' => 'Pages', 'action' => 'PrivateAccess']);
     $routes->connect('/ExternalLogin', ['controller' => 'Pages', 'action' => 'ExternalLogin']);
