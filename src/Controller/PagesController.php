@@ -47,7 +47,6 @@ class PagesController extends AppController
 
     public function intro()
     {
-        $this->set('title', 'Ukázková integrace s NIA - Otevřená Města');
     }
 
     public function idpInfo()
@@ -68,7 +67,7 @@ class PagesController extends AppController
     public function exampleStep2()
     {
         $this->exampleStep1();
-        $this->set('title', 'Integrace - Druhý krok');
+        $this->set('title', 'Implementace(2) - Vytvoření požadavku (AuthnRequest)');
         $idp_descriptor = $this->getIdpDescriptor();
         $signed_request = $this->generateAuthnRequest($idp_descriptor);
 
@@ -87,7 +86,7 @@ class PagesController extends AppController
 
     public function exampleStep1()
     {
-        $this->set('title', 'Integrace - První krok');
+        $this->set('title', 'Implementace(1) - Získání adresy pro přesměrování uživatele');
 
         $metadata = $this->getIdpDescriptor();
         $this->set(compact('metadata'));
@@ -225,25 +224,48 @@ class PagesController extends AppController
 
     public function ExternalLogin()
     {
+        $this->set('title', 'Implementace(3) - Zpracování výsledku autorizace');
         $nia_container = new NiaContainer($this);
         $service_provider = new NiaServiceProvider();
         ContainerSingleton::setContainer($nia_container);
 
-        $saml_response_raw = $this->request->getData('SAMLResponse');
-        $saml_response_raw = base64_decode($saml_response_raw);
-
-        $saml_response_dom = DOMDocumentFactory::fromString($saml_response_raw);
-
-        $local_private_key = new XMLSecurityKey(XMLSecurityKey::RSA_OAEP_MGF1P, ['type' => 'private']);
-        $local_private_key->loadKey(file_get_contents(CONFIG . 'private.key'), false, false);
+        try {
+            $saml_response_raw = $this->request->getData('SAMLResponse');
+            $saml_response_raw = base64_decode($saml_response_raw);
+            $saml_response_dom = DOMDocumentFactory::fromString($saml_response_raw);
+            $saml_response_dom->ownerDocument->preserveWhiteSpace = false;
+            $saml_response_dom->ownerDocument->formatOutput = true;
+            $saml_response_formatted = $saml_response_dom->ownerDocument->saveXML();
+            $this->set('dummy_response', false);
+        } catch (\Exception $e) {
+            $this->set('saml_response_error', $e);
+            $this->set('dummy_response', true);
+            $saml_response_raw = file_get_contents(WWW_ROOT . 'dummy_idp_response.xml');
+            $saml_response_dom = DOMDocumentFactory::fromFile(WWW_ROOT . 'dummy_idp_response.xml');
+            $saml_response_formatted = $saml_response_raw;
+        }
+        $this->set(compact('saml_response_raw', 'saml_response_dom', 'saml_response_formatted'));
 
         $response = new Response($saml_response_dom->documentElement);
-        $assertion = $response->getAssertions()[0];
-        if ($assertion instanceof EncryptedAssertion) {
-            $assertion = $assertion->getAssertion($local_private_key);
+        $assertions = $response->getAssertions();
+        $assertion = false;
+
+        try {
+            $local_private_key = new XMLSecurityKey(XMLSecurityKey::RSA_OAEP_MGF1P, ['type' => 'private']);
+            $local_private_key->loadKey(file_get_contents(CONFIG . 'private.key'), false, false);
+            foreach ($assertions as $a) {
+                if ($a instanceof EncryptedAssertion) {
+                    $assertion = $a->getAssertion($local_private_key);
+                    $assertion_xml = $assertion->toXML()->ownerDocument->saveXML();
+                }
+            }
+        } catch (\Exception $e) {
+            $this->set('private_key_error', $e);
+            $assertion = false;
+            $assertion_xml = false;
         }
 
-        $this->set(compact('saml_response_raw', 'saml_response_dom', 'response', 'assertion'));
+        $this->set(compact('response', 'assertion', 'assertion_xml', 'assertions'));
     }
 
     public function beforeFilter(Event $event)
