@@ -127,7 +127,7 @@ echo str_replace('<', '&lt;', $signed_request->ownerDocument->saveXML())
 
     // získání URL adresy
     // $redirect_url je popsána v posledním bodě kroku 1
-    $final_url = $redirect_url . '?SAMLRequest=' . $query;
+    $final_url = $redirect_url . (parse_url($redirect_url, PHP_URL_QUERY) ? '&' : '?') . 'SAMLRequest=' . $query;
 </code>
 </pre>
 

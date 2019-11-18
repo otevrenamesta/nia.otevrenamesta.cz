@@ -47,6 +47,7 @@ class PagesController extends AppController
 
     public function intro()
     {
+        $this->set('title', 'Ukázková integrace s NIA - Otevřená Města');
     }
 
     public function idpInfo()
@@ -79,7 +80,7 @@ class PagesController extends AppController
         $urls = $this->extractSSOLoginUrls($idp_descriptor);
         $sso_redirect_login_url = $urls[Constants::BINDING_HTTP_REDIRECT];
 
-        $link = $sso_redirect_login_url . '?SAMLRequest=' . $query;
+        $link = $sso_redirect_login_url . (parse_url($sso_redirect_login_url, PHP_URL_QUERY) ? '&' : '?') . 'SAMLRequest=' . $query;
 
         $this->set(compact('signed_request', 'query', 'link'));
     }
