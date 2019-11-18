@@ -231,7 +231,7 @@ class PagesController extends AppController
 
         try {
             $saml_response_raw = $this->request->getData('SAMLResponse');
-            $saml_response_raw = base64_decode($saml_response_raw);
+            $saml_response_raw = base64_decode($saml_response_raw, true /* striktní validace base64 */);
             $saml_response_dom = DOMDocumentFactory::fromString($saml_response_raw);
             $saml_response_dom->ownerDocument->preserveWhiteSpace = false;
             $saml_response_dom->ownerDocument->formatOutput = true;
@@ -246,7 +246,12 @@ class PagesController extends AppController
         }
         $this->set(compact('saml_response_raw', 'saml_response_dom', 'saml_response_formatted'));
 
+        $local_tnia_cert_data = file_get_contents(WWW_ROOT.'tnia.crt');
+        $tnia_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
+        $tnia_public_key->loadKey($local_tnia_cert_data, false, true);
+
         $response = new Response($saml_response_dom->documentElement);
+        $response->validate($tnia_public_key);
         $assertions = $response->getAssertions();
         $assertion = false;
 
@@ -256,7 +261,13 @@ class PagesController extends AppController
             foreach ($assertions as $a) {
                 if ($a instanceof EncryptedAssertion) {
                     $assertion = $a->getAssertion($local_private_key);
-                    $assertion_xml = $assertion->toXML()->ownerDocument->saveXML();
+
+                    $assertion_dom = $assertion->toXML();
+
+                    $assertion_dom->ownerDocument->preserveWhiteSpace = false;
+                    $assertion_dom->ownerDocument->formatOutput = true;
+
+                    $assertion_xml = $assertion_dom->ownerDocument->saveXML();
                 }
             }
         } catch (\Exception $e) {

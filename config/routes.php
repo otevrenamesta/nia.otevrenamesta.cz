@@ -39,5 +39,6 @@ Router::scope('/', function (RouteBuilder $routes) {
 
     $routes->connect('/example/step1', ['controller' => 'Pages', 'action' => 'exampleStep1']);
     $routes->connect('/example/step2', ['controller' => 'Pages', 'action' => 'exampleStep2']);
+    $routes->connect('/example/step3', ['controller' => 'Pages', 'action' => 'ExternalLogin']);
     $routes->connect('/example/test', ['controller' => 'Pages', 'action' => 'test']);
 });
