@@ -214,10 +214,20 @@ use App\View\AppView;
 
     <h2>Odhlášení uživatele</h2>
 
+    <aside class="aside-red">
+        <p>Před odhlášením uživatele na straně IdP NIA je třeba uživatele odhlásit v aplikaci (např. vymazat data v
+            session/cookie, případně upravit stav session v databázi)</p>
+        <p>Proces odhlášení na straně NIA nemusí proběhnout úspěšně a uživatel se již nemusí na stránky vaší aplikace
+            vůbec
+            vrátit</p>
+    </aside>
+
     <p>Odhlášení uživatele provedeme vytvořením XML požadavku typu samlp:LogoutRequest a vytvořením URL pro odhlášení,
         stejným způsobem jako jsme vytvářeli URL pro přihlášení</p>
 
     <h2>Obsah LogoutRequest</h2>
+    <aside><p>Podle aktuální příručky SeP (verze 1.8) není třeba LogoutRequest podepisovat, je však rozhodně doporučené
+            podpis požadavku provést</p></aside>
     <pre><code class="xml"><?= str_replace('<', '&lt;', $logout_request_xml_string) ?></code></pre>
 
     <p>kompresí (gzdeflate), enkódováním (base64) a urlenkódováním (urlencode) daného XML, získáme následující textový
@@ -226,9 +236,21 @@ use App\View\AppView;
     <pre><?= $logout_request_encoded ?></pre>
     <p>Ten následně spojíme s URL adresou z metadat IdP (SingleLogoutService s binding HTTP-REDIRECT), abychom dostali
         výslednou URL, kam uživatele přesměrovat</p>
-    <aside><p>Otevřením následující URL provedete odhlášení uživatele a IdP NIA přesměruje uživatele na URL adresu, kterou
-        máte nastavenou pro přesměrování po odhlášení v administraci SeP
+    <aside><p>Otevřením následující URL provedete odhlášení uživatele a IdP NIA přesměruje uživatele na URL adresu,
+            kterou
+            máte nastavenou pro přesměrování po odhlášení v administraci SeP
             (viz. <?= $this->Html->link('SeP - Úvod', ['action' => 'sepInfo']) ?>)</p>
     </aside>
-<h3><?php $logout_url_complete = $logout_url . (parse_url($logout_url, PHP_URL_QUERY) ? '&' : '?') . 'SAMLRequest=' . $logout_request_encoded;
-echo $this->Html->link(mb_substr($logout_url_complete, 0, 64) . '...', $logout_url_complete, ['target' => '_blank']); ?></h3>
+<?php if (!$dummy_response): ?>
+    <h3><?php $logout_url_complete = $logout_url . (parse_url($logout_url, PHP_URL_QUERY) ? '&' : '?') . 'SAMLRequest=' . $logout_request_encoded;
+        echo $this->Html->link(mb_substr($logout_url_complete, 0, 64) . '...', $logout_url_complete, ['target' => '_blank']); ?></h3>
+<?php else: ?>
+    <aside class="aside-red">
+        <p>Vzhledem k tomu, že se právě díváte na statická / historická data, tak proces odhlášení u IdP NIA neproběhne
+            vůbec, nebo skončí chybou</p>
+        <p>Pokud chcete vidět reálné chování IdP NIA, je potřeba začít celý proces v <?= $this->Html->link('kroku 2, tj. požadavkem na
+            přihlášení', ['action'=>'exampleStep2']) ?></p>
+        <p>Pokračujte prosím tedy přímo na 4. krok</p>
+    </aside>
+    <h2><?= $this->Html->link('Krok 4 - Zpracování výsledku odhlášení', ['action' => 'ExternalLogout']) ?></h2>
+<?php endif; ?>

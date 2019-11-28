@@ -104,7 +104,7 @@ class Application extends BaseApplication
             'field' => '_niaCsrf'
         ]);
         $csrf->whitelistCallback(function (Request $request) {
-            if ($request->getParam('action') === 'externalLogin') {
+            if (in_array($request->getParam('action'), ['externalLogin', 'externalLogout'])) {
                 return true;
             }
             return false;

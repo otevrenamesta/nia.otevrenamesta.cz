@@ -32,13 +32,15 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/sep-info', ['controller' => 'Pages', 'action' => 'sepInfo']);
     $routes->connect('/sep-info-metadata', ['controller' => 'Pages', 'action' => 'sepMetadata']);
 
+    $routes->connect('/example/step1', ['controller' => 'Pages', 'action' => 'exampleStep1']);
+    $routes->connect('/example/step2', ['controller' => 'Pages', 'action' => 'exampleStep2']);
+    $routes->connect('/example/step3', ['controller' => 'Pages', 'action' => 'ExternalLogin']);
+    $routes->connect('/example/step4', ['controller' => 'Pages', 'action' => 'ExternalLogout']);
+
     $routes->connect('/PrivateAccess', ['controller' => 'Pages', 'action' => 'PrivateAccess']);
     $routes->connect('/ExternalLogin', ['controller' => 'Pages', 'action' => 'ExternalLogin']);
     $routes->connect('/ExternalLogout', ['controller' => 'Pages', 'action' => 'ExternalLogout']);
     $routes->connect('/SeP/Konfigurace.xml', ['controller' => 'Pages', 'action' => 'SePConfiguration']);
 
-    $routes->connect('/example/step1', ['controller' => 'Pages', 'action' => 'exampleStep1']);
-    $routes->connect('/example/step2', ['controller' => 'Pages', 'action' => 'exampleStep2']);
-    $routes->connect('/example/step3', ['controller' => 'Pages', 'action' => 'ExternalLogin']);
     $routes->connect('/example/test', ['controller' => 'Pages', 'action' => 'test']);
 });

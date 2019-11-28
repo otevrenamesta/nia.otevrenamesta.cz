@@ -337,13 +337,32 @@ class PagesController extends AppController
 
     public function beforeFilter(Event $event)
     {
-        $this->Security->setConfig('unlockedActions', ['externalLogin']);
+        $this->Security->setConfig('unlockedActions', ['externalLogin','externalLogout']);
         return parent::beforeFilter($event);
     }
 
     public function ExternalLogout()
     {
+        $this->set('title', 'Implementace(4) - Zpracování výsledku odhlášení');
 
+        try {
+            $saml_response_raw = $this->request->getData('SAMLResponse');
+            $saml_response_raw = base64_decode($saml_response_raw, true /* striktní validace base64 */);
+            $saml_response_dom = DOMDocumentFactory::fromString($saml_response_raw);
+
+            $saml_response_dom->preserveWhiteSpace = false;
+            $saml_response_dom->formatOutput = true;
+            $saml_response_formatted = $saml_response_dom->saveXML();
+            $this->set('dummy_response', false);
+        } catch (Exception $e) {
+            $this->set('saml_response_error', $e);
+            $this->set('dummy_response', true);
+            $doc ='dummy_idp_logout_response.xml';
+            $saml_response_raw = file_get_contents(WWW_ROOT . $doc);
+            $saml_response_dom = DOMDocumentFactory::fromFile(WWW_ROOT . $doc);
+            $saml_response_formatted = $saml_response_raw;
+        }
+        $this->set(compact('saml_response_raw', 'saml_response_dom', 'saml_response_formatted'));
     }
 
     public function SePConfiguration()

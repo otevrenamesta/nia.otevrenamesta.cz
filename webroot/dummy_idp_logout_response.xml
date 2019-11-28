@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<LogoutResponse xmlns="urn:oasis:names:tc:SAML:2.0:protocol" ID="_b8822838-2bac-4c36-9d61-e644f97c2394" Version="2.0" IssueInstant="2019-11-28T17:29:49Z" InResponseTo="f976e267-beb8-4c16-8442-522ec761b588" Destination="https://nia.otevrenamesta.cz/ExternalLogout">
+  <Issuer xmlns="urn:oasis:names:tc:SAML:2.0:assertion">urn:microsoft:cgg2010:fpsts</Issuer>
+  <Status>
+    <StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+  </Status>
+</LogoutResponse>

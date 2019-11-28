@@ -75,6 +75,11 @@ use App\View\AppView; ?>
                            href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'ExternalLogin']) ?>">Krok
                             3</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="pure-button"
+                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'ExternalLogout']) ?>">Krok
+                            4</a>
+                    </li>
                 </ul>
             </nav>
         </div>
