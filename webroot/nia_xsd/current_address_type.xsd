@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:complexType xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="CurrentAddressType">
+  <xsd:annotation>
+    <xsd:documentation>
+Current address of the natural person.
+</xsd:documentation>
+  </xsd:annotation>
+  <xsd:sequence>
+    <xsd:element name="LocatorDesignator" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+    <xsd:element name="CvaddressArea" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+    <xsd:element name="Thoroughfare" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+    <xsd:element name="PostName" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+    <xsd:element name="PostCode" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+  </xsd:sequence>
+</xsd:complexType>

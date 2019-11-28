@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://schemas.eidentita.cz/moris/2016/identity/claims/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://schemas.eidentita.cz/moris/2016/identity/claims/" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1">
+  <xsd:attribute name="LatinScript" type="xsd:boolean" default="true"/>
+  <xsd:complexType name="TRadresaIDType">
+    <xsd:annotation>
+      <xsd:documentation>Current address of the natural person.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="okresKod" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="obecKod" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="castObceKod" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="uliceKod" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="postaKod" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="stavebniObjektKod" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="adresniMistoKod" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="cisloDomovni" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="cisloOrientacni" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="cisloOrientacniPismeno" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
