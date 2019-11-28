@@ -21,14 +21,19 @@ use App\Saml\NiaServiceProvider;
 use Cake\Cache\Cache;
 use Cake\Event\Event;
 use Cake\Routing\Router;
+use Cake\Utility\Text;
+use DOMElement;
+use Exception;
 use RobRichards\XMLSecLibs\XMLSecurityDSig;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
+use SAML2\Assertion;
 use SAML2\AuthnRequest;
 use SAML2\Certificate\Key;
 use SAML2\Compat\ContainerSingleton;
 use SAML2\Constants;
 use SAML2\DOMDocumentFactory;
 use SAML2\EncryptedAssertion;
+use SAML2\LogoutRequest;
 use SAML2\Response;
 use SAML2\XML\Chunk;
 use SAML2\XML\ds\KeyInfo;
@@ -99,7 +104,7 @@ class PagesController extends AppController
 
             $valid = $metadata->validate($tnia_key);
             $this->set(compact('valid'));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->Flash->error($e->getMessage());
         }
 
@@ -111,7 +116,7 @@ class PagesController extends AppController
         $metadata_dom = DOMDocumentFactory::fromString($metadata_string);
         try {
             return new EntityDescriptor($metadata_dom->documentElement);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->Flash->error($e->getMessage());
         }
         return false;
@@ -155,6 +160,32 @@ class PagesController extends AppController
         }
 
         return [Constants::BINDING_HTTP_REDIRECT => $sso_redirect_login_url, Constants::BINDING_HTTP_POST => $sso_post_login_url];
+    }
+
+    private function extractSSOLogoutUrls(EntityDescriptor $idp_descriptor)
+    {
+        $idp_sso_descriptor = false;
+        foreach ($idp_descriptor->getRoleDescriptor() as $role_descriptor) {
+            if ($role_descriptor instanceof IDPSSODescriptor) {
+                $idp_sso_descriptor = $role_descriptor;
+            }
+        }
+        $this->set(compact('idp_sso_descriptor'));
+
+        $sso_redirect_logout_url = false;
+        $sso_post_logout_url = false;
+
+        if ($idp_sso_descriptor instanceof IDPSSODescriptor) {
+            foreach ($idp_sso_descriptor->getSingleLogoutService() as $descriptorType) {
+                if ($descriptorType->getBinding() === Constants::BINDING_HTTP_REDIRECT) {
+                    $sso_redirect_logout_url = $descriptorType->getLocation();
+                } else if ($descriptorType->getBinding() === Constants::BINDING_HTTP_POST) {
+                    $sso_post_logout_url = $descriptorType->getLocation();
+                }
+            }
+        }
+
+        return [Constants::BINDING_HTTP_REDIRECT => $sso_redirect_logout_url, Constants::BINDING_HTTP_POST => $sso_post_logout_url];
     }
 
     private function generateAuthnRequest(EntityDescriptor $idp_descriptor)
@@ -238,7 +269,7 @@ class PagesController extends AppController
             $saml_response_dom->formatOutput = true;
             $saml_response_formatted = $saml_response_dom->saveXML();
             $this->set('dummy_response', false);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->set('saml_response_error', $e);
             $this->set('dummy_response', true);
             $dummy_fail = $this->request->getQuery('type') === 'failure';
@@ -272,9 +303,30 @@ class PagesController extends AppController
                     $assertion_dom->ownerDocument->formatOutput = true;
 
                     $assertion_xml = $assertion_dom->ownerDocument->saveXML();
+
+                    $attributes = $assertion->getAttributes();
+                    $current_address_key = "http://eidas.europa.eu/attributes/naturalperson/CurrentAddress";
+                    $current_address_raw = isset($attributes[$current_address_key]) ? base64_decode(reset($attributes[$current_address_key])) : false;
+
+                    $tradresaid_key = "http://schemas.eidentita.cz/moris/2016/identity/claims/tradresaid";
+                    $tradresaid_raw = isset($attributes[$tradresaid_key]) ? base64_decode(reset($attributes[$tradresaid_key])) : false;
+
+
+                    $idp_descriptor = $this->getIdpDescriptor();
+                    $logout_url = $this->extractSSOLogoutUrls($idp_descriptor)[Constants::BINDING_HTTP_REDIRECT];
+                    $logout_request = $this->generateLogoutRequest($idp_descriptor, $assertion);
+                    $logout_request->ownerDocument->preserveWhiteSpace = false;
+                    $logout_request->ownerDocument->formatOutput = true;
+                    $logout_request_xml_string = $logout_request->ownerDocument->saveXML();
+
+                    $logout_request_encoded = gzdeflate($logout_request_xml_string);
+                    $logout_request_encoded = base64_encode($logout_request_encoded);
+                    $logout_request_encoded = urlencode($logout_request_encoded);
+
+                    $this->set(compact('current_address_raw', 'tradresaid_raw', 'logout_request_xml_string', 'logout_request_encoded', 'logout_url'));
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->set('private_key_error', $e);
             $assertion = false;
             $assertion_xml = false;
@@ -389,6 +441,35 @@ class PagesController extends AppController
 
         $metadata_dom_signed = $service_provider->insertSignature($metadata_dom);
         return $metadata_dom_signed;
+    }
+
+    /**
+     * @param EntityDescriptor $idp_descriptor
+     * @param Assertion $assertion
+     * @return DOMElement
+     * @throws Exception
+     */
+    private function generateLogoutRequest(EntityDescriptor $idp_descriptor, Assertion $assertion)
+    {
+        $service_provider = new NiaServiceProvider();
+        $nia_container = new NiaContainer($this);
+        ContainerSingleton::setContainer($nia_container);
+
+        $urls = $this->extractSSOLogoutUrls($idp_descriptor);
+        $logout_redirect_url = $urls[Constants::BINDING_HTTP_REDIRECT];
+
+        $logout_request = new LogoutRequest();
+        $logout_request->setSessionIndex($assertion->getSessionIndex());
+        $logout_request->setDestination($logout_redirect_url);
+        $logout_request->setId(Text::uuid());
+        $logout_request->setIssueInstant(time());
+        $logout_request->setIssuer($nia_container->getIssuer());
+        $logout_request->setNameId($assertion->getNameId());
+
+        $logout_xml_dom = $logout_request->toUnsignedXML();
+        $logout_xml_dom = $service_provider->insertSignature($logout_xml_dom, false);
+
+        return $logout_xml_dom;
     }
 
 }

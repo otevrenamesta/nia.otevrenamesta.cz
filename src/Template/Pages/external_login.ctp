@@ -14,6 +14,11 @@ use App\View\AppView;
  * @var $assertion_xml string|bool
  * @var $title string
  * @var $dummy_fail boolean
+ * @var $current_address_raw boolean|string
+ * @var $tradresaid_raw boolean|string
+ * @var $logout_request_xml_string string
+ * @var $logout_request_encoded string
+ * @var $logout_url string
  */
 
 ?>
@@ -42,6 +47,7 @@ use App\View\AppView;
         <li>Rozšifrování EncryptedAssertion</li>
         <li>Získání informací o uživateli</li>
         <li>Přihlášení uživatele</li>
+        <li>Odhlášení uživatele</li>
     </ul>
 
     <h2 id="response-raw">Odpověď IdP (saml:Response)</h2>
@@ -185,6 +191,44 @@ use App\View\AppView;
     <p>Obsah těchto elementů je Base64 enkódovaná podoba XML obsahu, který by měl být validní podle XSD schématů
         uvedených v příručce SeP sekce 8.4</p>
 
-    <h3>např. CurrentAddress (typ CurrentAddressType)</h3>
-    <pre><code class="xml"><?= str_replace('<', '&lt;', $current_address_raw) ?></code></pre>
+    <?php if ($current_address_raw !== false): ?>
+        <h3>např. CurrentAddress (typ
+            CurrentAddressType) <?= $this->Html->link('(XSD)', '/nia_xsd/current_address_type.xsd') ?></h3>
+        <pre><code class="xml"><?= str_replace('<', '&lt;', $current_address_raw) ?></code></pre>
+    <?php endif; ?>
+
+    <?php if ($tradresaid_raw !== false): ?>
+        <h3>např. TRadresaID (typ
+            TRadresaIDType) <?= $this->Html->link('(XSD)', '/nia_xsd/tr_adresa_id_type.xsd') ?></h3>
+        <pre><code class="xml"><?= str_replace('<', '&lt;', $tradresaid_raw) ?></code></pre>
+    <?php endif; ?>
+
 <?php endif; ?>
+
+    <h2>Přihlášení uživatele</h2>
+
+    <p>Přihlášení uživatele je pak na základě poskytnutých a ověřených informací od IdP plně v kompetenci vaší
+        aplikace</p>
+    <p>Pro odhlášení uživatele je nutné si uložit (např. v databázi, session nebo cookie) obsah atributů <strong>SessionIndex</strong>
+        elementu saml:AuthnStatement a obsah elementu <strong>saml:NameID</strong></p>
+
+    <h2>Odhlášení uživatele</h2>
+
+    <p>Odhlášení uživatele provedeme vytvořením XML požadavku typu samlp:LogoutRequest a vytvořením URL pro odhlášení,
+        stejným způsobem jako jsme vytvářeli URL pro přihlášení</p>
+
+    <h2>Obsah LogoutRequest</h2>
+    <pre><code class="xml"><?= str_replace('<', '&lt;', $logout_request_xml_string) ?></code></pre>
+
+    <p>kompresí (gzdeflate), enkódováním (base64) a urlenkódováním (urlencode) daného XML, získáme následující textový
+        řetězec</p>
+
+    <pre><?= $logout_request_encoded ?></pre>
+    <p>Ten následně spojíme s URL adresou z metadat IdP (SingleLogoutService s binding HTTP-REDIRECT), abychom dostali
+        výslednou URL, kam uživatele přesměrovat</p>
+    <aside><p>Otevřením následující URL provedete odhlášení uživatele a IdP NIA přesměruje uživatele na URL adresu, kterou
+        máte nastavenou pro přesměrování po odhlášení v administraci SeP
+            (viz. <?= $this->Html->link('SeP - Úvod', ['action' => 'sepInfo']) ?>)</p>
+    </aside>
+<h3><?php $logout_url_complete = $logout_url . (parse_url($logout_url, PHP_URL_QUERY) ? '&' : '?') . 'SAMLRequest=' . $logout_request_encoded;
+echo $this->Html->link(mb_substr($logout_url_complete, 0, 64) . '...', $logout_url_complete, ['target' => '_blank']); ?></h3>

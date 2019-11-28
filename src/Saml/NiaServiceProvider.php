@@ -31,7 +31,7 @@ class NiaServiceProvider extends ServiceProvider
         return self::$IssuerURL;
     }
 
-    public function insertSignature(\DOMElement $domelement)
+    public function insertSignature(\DOMElement $domelement, $insertCertificates = true)
     {
         $local_private_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'private']);
         $local_private_key->loadKey(file_get_contents(CONFIG . 'private.key'), false, false);
@@ -41,7 +41,7 @@ class NiaServiceProvider extends ServiceProvider
             $insertAfter = $domelement->getElementsByTagName('Issuer')->item(0)->nextSibling;
         }
 
-        Utils::insertSignature($local_private_key, [$this->getCertificateFile()], $domelement, $insertAfter);
+        Utils::insertSignature($local_private_key, $insertCertificates ? [$this->getCertificateFile()] : [], $domelement, $insertAfter);
 
         return $domelement;
     }
