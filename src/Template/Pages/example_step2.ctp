@@ -12,7 +12,7 @@ use App\View\AppView; ?>
 <p>Z kroku 1 jsme získali ověřenou URL adresu pro přesměrování uživatele na autorizaci</p>
 <p>Nyní je třeba vytvořit autorizační požadavek a tento předat NIA IdP</p>
 
-<h2>Postup</h2>
+<h2 id="steps">Postup</h2>
 <ol>
     <li>Vytvoření XML požadavku na autorizaci</li>
     <li>Podepsání požadavku</li>
@@ -20,7 +20,7 @@ use App\View\AppView; ?>
     <li>Přesměrování uživatele</li>
 </ol>
 
-<h2>Vytvoření a podepsání XML požadavku na autorizaci</h2>
+<h2 id="authrequest-create">Vytvoření a podepsání XML požadavku na autorizaci</h2>
 
 <pre>
     <code class="php">
@@ -74,7 +74,7 @@ use App\View\AppView; ?>
     </code>
 </pre>
 
-<h2>AuthnRequest - obsah požadavku</h2>
+<h2 id="authrequest-basics">AuthnRequest - obsah požadavku</h2>
 
 <strong>Důležité náležitosti AuthnRequest</strong>
 <ul>
@@ -101,7 +101,7 @@ echo str_replace('<', '&lt;', $signed_request->ownerDocument->saveXML())
     </code>
 </pre>
 
-<h2>Získání finální podoby požadavku</h2>
+<h2 id="authrequest-signature">Získání finální podoby požadavku</h2>
 
 <p>Adresa na kterou přesměrujeme uživatele se skládá následovně</p>
 <ul>
@@ -131,7 +131,7 @@ echo str_replace('<', '&lt;', $signed_request->ownerDocument->saveXML())
 </code>
 </pre>
 
-<h2>Obsah finální URL (vygenerováno právě teď):</h2>
+<h2 id="redirect-url">Obsah finální URL (vygenerováno právě teď):</h2>
 
 <?php dump($link) ?>
 
@@ -143,7 +143,7 @@ echo str_replace('<', '&lt;', $signed_request->ownerDocument->saveXML())
         provádět <strong>urlencode</strong>, jelikož data nejsou vkládána do URL adresy</p>
 </aside>
 
-<h2>Další krok</h2>
+<h2 id="next-step">Další krok</h2>
 <p>Otevřením finální URL se spustí proces autorizace u NIA, jeho dokončením se vrátíte na tento tutoriál na Krok 3</p>
 <aside>
     <p>Vzhledem k tomu že se jedná o NIA testovací prostředí, požadavek může z různých důvodů selhat i bez chyb na
@@ -151,4 +151,4 @@ echo str_replace('<', '&lt;', $signed_request->ownerDocument->saveXML())
     <p>V takovém případě se vraťte na tuto stránku a proces autorizace kliknutím spusťte znovu</p>
 </aside>
 
-<h2><a href="<?= $link ?>" target="_blank">Otevřít finální URL</a></h2>
+<h2 id="link-step3"><a href="<?= $link ?>" target="_blank">Otevřít finální URL</a></h2>

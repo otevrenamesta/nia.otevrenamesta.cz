@@ -233,20 +233,24 @@ class PagesController extends AppController
             $saml_response_raw = $this->request->getData('SAMLResponse');
             $saml_response_raw = base64_decode($saml_response_raw, true /* striktní validace base64 */);
             $saml_response_dom = DOMDocumentFactory::fromString($saml_response_raw);
-            $saml_response_dom->ownerDocument->preserveWhiteSpace = false;
-            $saml_response_dom->ownerDocument->formatOutput = true;
-            $saml_response_formatted = $saml_response_dom->ownerDocument->saveXML();
+
+            $saml_response_dom->preserveWhiteSpace = false;
+            $saml_response_dom->formatOutput = true;
+            $saml_response_formatted = $saml_response_dom->saveXML();
             $this->set('dummy_response', false);
         } catch (\Exception $e) {
             $this->set('saml_response_error', $e);
             $this->set('dummy_response', true);
-            $saml_response_raw = file_get_contents(WWW_ROOT . 'dummy_idp_response.xml');
-            $saml_response_dom = DOMDocumentFactory::fromFile(WWW_ROOT . 'dummy_idp_response.xml');
+            $dummy_fail = $this->request->getQuery('type') === 'failure';
+            $this->set(compact('dummy_fail'));
+            $doc = $dummy_fail ? 'dummy_idp_response.xml' : 'fail_idp_response.xml';
+            $saml_response_raw = file_get_contents(WWW_ROOT . $doc);
+            $saml_response_dom = DOMDocumentFactory::fromFile(WWW_ROOT . $doc);
             $saml_response_formatted = $saml_response_raw;
         }
         $this->set(compact('saml_response_raw', 'saml_response_dom', 'saml_response_formatted'));
 
-        $local_tnia_cert_data = file_get_contents(WWW_ROOT.'tnia.crt');
+        $local_tnia_cert_data = file_get_contents(WWW_ROOT . 'tnia.crt');
         $tnia_public_key = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'public']);
         $tnia_public_key->loadKey($local_tnia_cert_data, false, true);
 

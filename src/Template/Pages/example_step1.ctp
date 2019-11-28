@@ -19,14 +19,14 @@ use SAML2\XML\md\EntityDescriptor;
 <p>Více informací o NIA IdP metadatech je uvedeno na
     stránce <?= $this->Html->link('IdP - Úvod', ['controller' => 'Pages', 'action' => 'idpInfo']) ?></p>
 
-<h2>Postup</h2>
+<h2 id="steps">Postup</h2>
 <ol>
     <li>Stažení souboru metadat</li>
     <li>Ověření obsahu metadat (dle RSA-SHA256 signatury XMLDSIG)</li>
     <li>Získání adresy pro přesměrování uživatele</li>
 </ol>
 
-<h3>1. stažení souboru a parsování jeho dat</h3>
+<h3 id="metadata-download">1. stažení souboru a parsování jeho dat</h3>
 <pre>
     <code class="php">
  &lt;?php
@@ -45,7 +45,7 @@ use SAML2\XML\md\EntityDescriptor;
 Objekt následovně obsahuje tato data:<br/>
 <?php dump($metadata) ?>
 
-<h3>2. Ověření obsahu souboru</h3>
+<h3 id="metadata-verify">2. Ověření obsahu souboru</h3>
 <pre>
     <code class="php">
  &lt;?php
@@ -65,7 +65,7 @@ Objekt následovně obsahuje tato data:<br/>
 
 Obsah proměnné valid: <?php dump($valid) ?>
 
-<h3>3. Získání adresy pro přesměrování uživatele</h3>
+<h3 id="extract-sso-login-url">3. Získání adresy pro přesměrování uživatele</h3>
 <pre>
     <code class="php">
     &lt;?php
@@ -105,4 +105,4 @@ Obsah proměnné valid: <?php dump($valid) ?>
 
 Obsah proměnné urls: <?php dump($urls) ?>
 
-<h2><?= $this->Html->link('Pokračovat na Druhý krok', ['controller' => 'Pages', 'action' => 'exampleStep2']) ?></h2>
+<h2 id="link-step2"><?= $this->Html->link('Pokračovat na Druhý krok', ['controller' => 'Pages', 'action' => 'exampleStep2']) ?></h2>

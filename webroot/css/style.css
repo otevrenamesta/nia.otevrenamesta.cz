@@ -218,3 +218,40 @@ aside a, aside a:visited {
 .bottom-spacing {
     padding-bottom: 10em;
 }
+
+.b-1 {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.tick-green a {
+    text-decoration: green underline;
+    color: green;
+}
+
+.tick-red a {
+    text-decoration: red underline;
+    color: red;
+}
+
+.tick-green::after {
+    color: green;
+    content: "✔";
+}
+
+.tick-red::after {
+    color: red;
+    content: "✘";
+}
+
+aside.aside-red {
+    background-color: lightcoral;
+    color: black;
+}
+aside.aside-red a {
+    color: black;
+}

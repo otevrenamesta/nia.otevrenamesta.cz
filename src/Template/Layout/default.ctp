@@ -24,7 +24,7 @@ use App\View\AppView; ?>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
 
-    <?= $this->Html->css(['style']) ?>
+    <?= $this->Html->css(['style.css?v=2']) ?>
 
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
@@ -69,6 +69,11 @@ use App\View\AppView; ?>
                         <a class="pure-button"
                            href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'exampleStep2']) ?>">Krok
                             2</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="pure-button"
+                           href="<?= $this->Url->build(['controller' => 'Pages', 'action' => 'ExternalLogin']) ?>">Krok
+                            3</a>
                     </li>
                 </ul>
             </nav>
