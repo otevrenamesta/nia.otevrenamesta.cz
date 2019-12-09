@@ -32,6 +32,18 @@ use App\View\AppView; ?>
     </p>
 </aside>
 
+<h2>Jak se stát Poskytovatelem Služeb (SeP)</h2>
+<ul>
+    <li>Pokud jste <strong>OVM (orgán státní moci nebo státem zřizovaná instituce)</strong> - stačí se přihlásit datovou schránkou vašeho statutárního orgánu (starostka, ředitel, ...) na stránkách <a href="https://www.eidentita.cz/Home">eIdentita.cz</a>, dole na stránce odkazem <a href="https://www.eidentita.cz/Sep/SepSignIn">Přihlásit se jako poskytovatel služby</a><br/>&nbsp;</li>
+    <li>
+        Pokud jste <strong>soukromoprávní subjekt (firma nebo osvč)</strong>, musíte nejdříve požádat o povolení, dle zákonem definovaného důvodu, který vás opravňuje vyžadovat ověřenou identitu, pak je proces stejný (přihlášení datovou schránkou statutárního orgánu, úroveň <a href="https://www.mojedatovaschranka.cz/static/ISDS/help/page8.html">"Oprávněná osoba"</a>)
+        <br/>&nbsp;<ul>
+            <li>Volnou formou můžete požádat na e-mailové adrese: eidentita@szrcr.cz</li>
+            <li>E-mailová diskuze k oprávněnosti soukromoprávních subjektů (MVČR) zde <?= $this->Html->link('https://github.com/smarek/e-referendum.cz/issues/1')?></li>
+        </ul>
+    </li>
+</ul>
+
 <h2>Základy vytvoření SeP</h2>
 
 <p>Pro začátek screenshot z konfiguračního rozhraní SeP na portálu <a href="https://twww.eidentita.cz/">https://twww.eidentita.cz/</a>
