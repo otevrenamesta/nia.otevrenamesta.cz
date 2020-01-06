@@ -37,13 +37,6 @@ use App\View\AppView; ?>
     </li>
 </ol>
 
-<aside>
-    <p>
-        Je potřeba dodat že poskytnutí jen XML rozhraní, je sadistické rozhodnutí státní správy, se
-        kterým se prostě musíme smířit
-    </p>
-</aside>
-
 <h2>Ukázka XML metadat (testovací prostředí)</h2>
 <pre><code class="xml">&lt;EntityDescriptor xmlns=&quot;urn:oasis:names:tc:SAML:2.0:metadata&quot; ID=&quot;_8f5bbcc0-6a28-4cfe-a335-b6abf1aa089d&quot; entityID=&quot;urn:microsoft:cgg2010:fpsts&quot;&gt;
 
