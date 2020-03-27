@@ -269,6 +269,7 @@ class PagesController extends AppController
             $saml_response_dom->formatOutput = true;
             $saml_response_formatted = $saml_response_dom->saveXML();
             $this->set('dummy_response', false);
+            $this->set('dummy_fail', false);
         } catch (Exception $e) {
             $this->set('saml_response_error', $e);
             $this->set('dummy_response', true);
