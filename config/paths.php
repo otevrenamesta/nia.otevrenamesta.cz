@@ -44,7 +44,7 @@ define('APP', ROOT . DS . APP_DIR . DS);
 /**
  * Path to the config directory.
  */
-define('CONFIG', ROOT . DS . 'config' . DS);
+define('CONFIG', env('APPDIR_CONFIG', ROOT . DS . 'config') . DS);
 
 /**
  * File path to the webroot directory.
@@ -63,17 +63,17 @@ define('TESTS', ROOT . DS . 'tests' . DS);
 /**
  * Path to the temporary files directory.
  */
-define('TMP', ROOT . DS . 'tmp' . DS);
+define('TMP', env('APPDIR_TMP', ROOT . DS . 'tmp') . DS);
 
 /**
  * Path to the logs directory.
  */
-define('LOGS', ROOT . DS . 'logs' . DS);
+define('LOGS', env('APPDIR_LOGS', ROOT . DS . 'logs') . DS);
 
 /**
  * Path to the cache files directory. It can be shared between hosts in a multi-server setup.
  */
-define('CACHE', TMP . 'cache' . DS);
+define('CACHE', env('APPDIR_CACHE', TMP . 'cache') . DS);
 
 /**
  * The absolute path to the "cake" directory, WITHOUT a trailing DS.
