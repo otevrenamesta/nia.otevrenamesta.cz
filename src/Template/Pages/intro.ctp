@@ -1,4 +1,4 @@
-<h1>Vítejte v ukázkové integraci s NIA (<?= $this->Html->link('eidentita.cz', 'https://www.eidentita.cz/Home') ?>)</h1>
+<h1>Vítejte v ukázkové integraci s NIA (<?= $this->Html->link('identitaobcana.cz', 'https://www.identitaobcana.cz/Home') ?>)</h1>
 
 <p>Cílem tohoto projektu je představit a zjednodušit integraci s NIA (Národním bodem pro
     identifikaci a autentizaci)

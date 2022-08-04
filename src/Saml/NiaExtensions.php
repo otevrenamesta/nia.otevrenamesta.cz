@@ -44,13 +44,13 @@ class NiaExtensions
         'Name' => 'http://schemas.eidentity.cz/moris/2016/identity/claims/phonenumber'
     ];
     public static $ATTR_CZMORIS_TR_ADRESA_ID = [
-        'Name' => 'http://schemas.eidentita.cz/moris/2016/identity/claims/tradresaid'
+        'Name' => 'http://schemas.identitaobcana.cz/moris/2016/identity/claims/tradresaid'
     ];
     public static $ATTR_CZMORIS_ID_TYPE = [
-        'Name' => 'http://schemas.eidentita.cz/moris/2016/identity/claims/idtype'
+        'Name' => 'http://schemas.identitaobcana.cz/moris/2016/identity/claims/idtype'
     ];
     public static $ATTR_CZMORIS_ID_NUMBER = [
-        'Name' => 'http://schemas.eidentita.cz/moris/2016/identity/claims/idnumber'
+        'Name' => 'http://schemas.identitaobcana.cz/moris/2016/identity/claims/idnumber'
     ];
     private $dom = false;
     private $sptype = 'public';

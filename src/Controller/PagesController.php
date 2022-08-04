@@ -124,7 +124,7 @@ class PagesController extends AppController
 
     private function getIdpMetadataContents()
     {
-        $idp_metadata_url = 'https://tnia.eidentita.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml';
+        $idp_metadata_url = 'https://tnia.identitaobcana.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml';
         $idp_metadata_contents = Cache::read('idp_metadata_contents');
         $from_cache = true;
         if ($idp_metadata_contents === false) {
@@ -309,7 +309,7 @@ class PagesController extends AppController
                     $current_address_key = "http://eidas.europa.eu/attributes/naturalperson/CurrentAddress";
                     $current_address_raw = isset($attributes[$current_address_key]) ? base64_decode(reset($attributes[$current_address_key])) : false;
 
-                    $tradresaid_key = "http://schemas.eidentita.cz/moris/2016/identity/claims/tradresaid";
+                    $tradresaid_key = "http://schemas.identitaobcana.cz/moris/2016/identity/claims/tradresaid";
                     $tradresaid_raw = isset($attributes[$tradresaid_key]) ? base64_decode(reset($attributes[$tradresaid_key])) : false;
 
 

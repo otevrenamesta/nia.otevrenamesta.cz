@@ -25,15 +25,15 @@ use App\View\AppView; ?>
 </ol>
 
 <p>Abychom se mohli integrovat s IdP, je třeba pochopit poskytované služby a rozhraní, k tomu slouží IdP metadata.
-<p>Dle <a href="https://info.eidentita.cz/download/SeP_PriruckaKvalifikovanehoPoskytovatele.pdf">příručky
+<p>Dle <a href="https://info.identitaobcana.cz/download/SeP_PriruckaKvalifikovanehoPoskytovatele.pdf">příručky
         SeP</a> jsou metadata na těchto adresách
 
 <ol>
     <li>Testovací prostředí: <a target="_blank"
-                                href="https://tnia.eidentita.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml">https://tnia.eidentita.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml</a>
+                                href="https://tnia.identitaobcana.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml">https://tnia.identitaobcana.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml</a>
     </li>
     <li>Produkční prostředí: <a target="_blank"
-                                href="https://nia.eidentita.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml">https://nia.eidentita.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml</a>
+                                href="https://nia.identitaobcana.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml">https://nia.identitaobcana.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml</a>
     </li>
 </ol>
 
@@ -84,12 +84,12 @@ use App\View\AppView; ?>
     &lt;/fed:ClaimTypesOffered>
     &lt;fed:SecurityTokenServiceEndpoint>
       &lt;wsa:EndpointReference xmlns:wsa="http://www.w3.org/2005/08/addressing">
-        &lt;wsa:Address>https://tnia.eidentita.cz/FPSTS/issue.svc&lt;/wsa:Address>
+        &lt;wsa:Address>https://tnia.identitaobcana.cz/FPSTS/issue.svc&lt;/wsa:Address>
       &lt;/wsa:EndpointReference>
     &lt;/fed:SecurityTokenServiceEndpoint>
     &lt;fed:PassiveRequestorEndpoint>
       &lt;wsa:EndpointReference xmlns:wsa="http://www.w3.org/2005/08/addressing">
-        &lt;wsa:Address>https://tnia.eidentita.cz/FPSTS/default.aspx&lt;/wsa:Address>
+        &lt;wsa:Address>https://tnia.identitaobcana.cz/FPSTS/default.aspx&lt;/wsa:Address>
       &lt;/wsa:EndpointReference>
     &lt;/fed:PassiveRequestorEndpoint>
   &lt;/RoleDescriptor>
@@ -104,9 +104,9 @@ use App\View\AppView; ?>
         &lt;/X509Data>
       &lt;/KeyInfo>
     &lt;/KeyDescriptor>
-    &lt;SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://tnia.eidentita.cz/FPSTS/saml2/basic"/>
-    &lt;SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://tnia.eidentita.cz/FPSTS/saml2/basic"/>
-    &lt;SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://tnia.eidentita.cz/FPSTS/saml2/basic"/>
+    &lt;SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://tnia.identitaobcana.cz/FPSTS/saml2/basic"/>
+    &lt;SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://tnia.identitaobcana.cz/FPSTS/saml2/basic"/>
+    &lt;SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://tnia.identitaobcana.cz/FPSTS/saml2/basic"/>
   &lt;/IDPSSODescriptor>
 &lt;/EntityDescriptor>
 

@@ -15,7 +15,7 @@ use SAML2\XML\md\EntityDescriptor;
 
 <p>Prvním krokem je získání informací z metadat IdP</p>
 <p>V <?= $this->Html->link('dokumentaci', '') ?> je uveden odkaz na metadata NIA
-    IdP <?= $this->Html->link('FederationMetadata.xml', 'https://tnia.eidentita.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml') ?></p>
+    IdP <?= $this->Html->link('FederationMetadata.xml', 'https://tnia.identitaobcana.cz/fpsts/FederationMetadata/2007-06/FederationMetadata.xml') ?></p>
 <p>Více informací o NIA IdP metadatech je uvedeno na
     stránce <?= $this->Html->link('IdP - Úvod', ['controller' => 'Pages', 'action' => 'idpInfo']) ?></p>
 
@@ -34,7 +34,7 @@ use SAML2\XML\md\EntityDescriptor;
  use SAML2\XML\md\EntityDescriptor;
  use SAML2\DOMDocumentFactory;
 
- $metadata_url = "https://tnia.eidentita.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml";
+ $metadata_url = "https://tnia.identitaobcana.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml";
  $metadata_string = file_get_contents($metadata_url);
  $metadata_dom = DOMDocumentFactory::fromString($metadata_string);
  $metadata = new EntityDescriptor($metadata_dom->documentElement);
