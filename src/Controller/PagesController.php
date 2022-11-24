@@ -336,7 +336,7 @@ class PagesController extends AppController
         $this->set(compact('response', 'assertion', 'assertion_xml', 'assertions'));
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(\Cake\Event\EventInterface $event)
     {
         $this->Security->setConfig('unlockedActions', ['externalLogin','externalLogout']);
         return parent::beforeFilter($event);
