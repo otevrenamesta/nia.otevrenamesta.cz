@@ -248,12 +248,12 @@ class PagesController extends AppController
         $this->set(compact('idp_descriptor', 'local_tnia_cert', 'local_cert', 'auth_request', 'auth_request_xml', 'auth_request_encoded', 'link'));
     }
 
-    public function PrivateAccess()
+    public function privateAccess()
     {
 
     }
 
-    public function ExternalLogin()
+    public function externalLogin()
     {
         $this->set('title', 'Implementace(3) - Zpracování výsledku autorizace');
         $nia_container = new NiaContainer($this);
@@ -342,7 +342,7 @@ class PagesController extends AppController
         return parent::beforeFilter($event);
     }
 
-    public function ExternalLogout()
+    public function externalLogout()
     {
         $this->set('title', 'Implementace(4) - Zpracování výsledku odhlášení');
 
@@ -366,7 +366,7 @@ class PagesController extends AppController
         $this->set(compact('saml_response_raw', 'saml_response_dom', 'saml_response_formatted'));
     }
 
-    public function SePConfiguration()
+    public function sePConfiguration()
     {
         $metadata_dom_signed = $this->generateSePMetadata();
 
