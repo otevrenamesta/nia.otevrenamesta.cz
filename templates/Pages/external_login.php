@@ -33,10 +33,10 @@ use App\View\AppView;
     </aside>
     <div class="pure-g">
         <div class="pure-u-1-2 b-1 text-center">
-            <h3 class="<?= $dummy_fail ? 'tick-red' : 'tick-green' ?>"><?= $this->Html->link('Zobrazit data úspěšné autorizace', ['type' => 'success']) ?></h3>
+            <h3 class="<?= $dummy_fail ? 'tick-red' : 'tick-green' ?>"><?= $this->Html->link('Zobrazit data úspěšné autorizace', ['?' => ['type' => 'success']]) ?></h3>
         </div>
         <div class="pure-u-1-2 b-1 text-center">
-            <h3 class="<?= $dummy_fail ? 'tick-green' : 'tick-red' ?>"><?= $this->Html->link('Zobrazit data neúspěšné autorizace', ['type' => 'failure']) ?></h3>
+            <h3 class="<?= $dummy_fail ? 'tick-green' : 'tick-red' ?>"><?= $this->Html->link('Zobrazit data neúspěšné autorizace', ['?' => ['type' => 'failure']]) ?></h3>
         </div>
     </div>
 <?php endif; ?>
