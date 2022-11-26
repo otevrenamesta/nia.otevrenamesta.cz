@@ -49,7 +49,11 @@ class NiaContainer extends AbstractContainer
     public function debugMessage($message, string $type): void
     {
         $this->getLogger()->debug($type);
-        $this->getLogger()->debug($message);
+        $this->getLogger()->debug(
+            gettype($message) == "object" && get_class($message) == "DOMElement" ?
+                $message->textContent :
+                $message
+        );
     }
 
     /**
