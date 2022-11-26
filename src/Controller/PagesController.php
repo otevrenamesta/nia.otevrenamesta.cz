@@ -127,7 +127,7 @@ class PagesController extends AppController
         $idp_metadata_url = 'https://tnia.identitaobcana.cz/FPSTS/FederationMetadata/2007-06/FederationMetadata.xml';
         $idp_metadata_contents = Cache::read('idp_metadata_contents');
         $from_cache = true;
-        if ($idp_metadata_contents === false) {
+        if ($idp_metadata_contents === null) {
             $idp_metadata_contents = file_get_contents($idp_metadata_url);
             Cache::write('idp_metadata_contents', $idp_metadata_contents);
             $from_cache = false;
