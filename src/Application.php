@@ -35,7 +35,7 @@ class Application extends BaseApplication
     /**
      * {@inheritDoc}
      */
-    public function bootstrap()
+    public function bootstrap(): void
     {
         // Call parent to load bootstrap from files.
         parent::bootstrap();
@@ -58,7 +58,7 @@ class Application extends BaseApplication
     /**
      * @return void
      */
-    protected function bootstrapCli()
+    protected function bootstrapCli(): void
     {
         try {
             $this->addPlugin('Bake');
@@ -77,7 +77,7 @@ class Application extends BaseApplication
      * @param \Cake\Http\MiddlewareQueue $middlewareQueue The middleware queue to setup.
      * @return \Cake\Http\MiddlewareQueue The updated middleware queue.
      */
-    public function middleware($middlewareQueue)
+    public function middleware($middlewareQueue): \Cake\Http\MiddlewareQueue
     {
         $middlewareQueue
             // Catch any exceptions in the lower layers,
@@ -103,7 +103,7 @@ class Application extends BaseApplication
             'cookieName' => 'niaCsrfProtector',
             'field' => '_niaCsrf'
         ]);
-        $csrf->whitelistCallback(function (Request $request) {
+        $csrf->skipCheckCallback(function (\Cake\Http\ServerRequest $request) {
             if (in_array($request->getParam('action'), ['externalLogin', 'externalLogout'])) {
                 return true;
             }
