@@ -103,7 +103,7 @@ class Application extends BaseApplication
             'cookieName' => 'niaCsrfProtector',
             'field' => '_niaCsrf'
         ]);
-        $csrf->skipCheckCallback(function (Request $request) {
+        $csrf->skipCheckCallback(function (\Cake\Http\ServerRequest $request) {
             if (in_array($request->getParam('action'), ['externalLogin', 'externalLogout'])) {
                 return true;
             }
